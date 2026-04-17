@@ -18,6 +18,7 @@
         "vue": "^3.2.41"
     },
     "dependencies": {
+        "canvas-confetti": "^1.9.3",
         "chart.js": "^4.5.1",
         "sweetalert2": "^11.26.24",
         "vue-chartjs": "^5.3.3"

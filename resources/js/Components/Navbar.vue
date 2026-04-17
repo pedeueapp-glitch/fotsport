@@ -73,8 +73,13 @@ const toggleMobileMenu = () => {
                         </button>
                         
                         <Link :href="route('login')" 
+                              class="text-gray-600 hover:text-brand-orange font-bold text-sm transition-colors uppercase tracking-widest">
+                            Entrar
+                        </Link>
+                        
+                        <Link :href="route('register')" 
                               class="bg-brand-blue hover:bg-brand-blue-hover text-white px-6 py-2.5 rounded-full font-bold text-sm transition-all uppercase tracking-widest shadow-md hover:shadow-lg active:scale-95">
-                            Área do Fotógrafo
+                            Seja um Fotógrafo
                         </Link>
                     </template>
 
@@ -165,11 +170,16 @@ const toggleMobileMenu = () => {
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                             Minhas Fotos
                         </button>
-                        <div class="pt-2">
+                        <div class="grid grid-cols-2 gap-2 pt-2">
                             <Link :href="route('login')" 
                                   @click="mobileMenuOpen = false"
-                                  class="block w-full text-center bg-brand-blue text-white px-6 py-4 rounded-2xl font-black text-sm transition-all uppercase tracking-widest shadow-md">
-                                Área do Fotógrafo
+                                  class="text-center border border-brand-blue text-brand-blue px-6 py-4 rounded-2xl font-black text-sm transition-all uppercase tracking-widest">
+                                Entrar
+                            </Link>
+                            <Link :href="route('register')" 
+                                  @click="mobileMenuOpen = false"
+                                  class="text-center bg-brand-blue text-white px-6 py-4 rounded-2xl font-black text-sm transition-all uppercase tracking-widest shadow-md">
+                                Cadastrar
                             </Link>
                         </div>
                     </template>

@@ -102,7 +102,7 @@ class PhotoController extends Controller
             try {
                 Http::timeout(60)
                     ->attach('file', fopen($originalPath ? storage_path('app/' . $originalPath) : $file->getRealPath(), 'r'), $filename)
-                    ->post('http://localhost:8001/index_photo/', [
+                    ->post('http://face-api:8001/index_photo/', [
                         'photo_id' => $photoModel->id,
                         'event_id' => $event->id
                     ]);

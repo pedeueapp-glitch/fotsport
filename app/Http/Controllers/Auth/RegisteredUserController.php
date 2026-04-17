@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -39,6 +40,7 @@ class RegisteredUserController extends Controller
 
         $user = User::create([
             'name' => strip_tags($request->name),
+            'slug' => Str::slug($request->name) . '-' . Str::random(5),
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);

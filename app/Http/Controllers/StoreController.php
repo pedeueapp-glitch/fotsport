@@ -44,7 +44,7 @@ class StoreController extends Controller
 
             $response = Http::timeout(60)
                 ->attach('file', file_get_contents($file->getRealPath()), 'selfie.jpg')
-                ->post('http://localhost:8001/search_face/', $postData);
+                ->post('http://face-api:8001/search_face/', $postData);
 
             if ($response->successful()) {
                 $matchIds = $response->json()['matches'] ?? [];

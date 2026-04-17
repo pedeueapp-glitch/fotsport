@@ -99,8 +99,8 @@ defineProps({
                         <p class="text-lg md:text-xl font-medium text-white/70 mb-10 leading-relaxed">
                             Junte-se a maior plataforma de fotos esportivas. Suba suas fotos, use nossa tecnologia de IA e venda em minutos.
                         </p>
-                        <Link :href="route('login')" class="inline-block bg-white text-brand-blue hover:bg-brand-orange hover:text-white px-10 py-5 rounded-full font-black text-sm transition-all uppercase tracking-[0.2em] shadow-xl hover:shadow-brand-orange/30">
-                            Começar Agora
+                        <Link :href="route('register')" class="inline-block bg-white text-brand-blue hover:bg-brand-orange hover:text-white px-10 py-5 rounded-full font-black text-sm transition-all uppercase tracking-[0.2em] shadow-xl hover:shadow-brand-orange/30">
+                            Cadastrar como Fotógrafo
                         </Link>
                     </div>
                     <div class="h-1 bg-white/10 w-full md:w-1 md:h-64 rounded-full"></div>
