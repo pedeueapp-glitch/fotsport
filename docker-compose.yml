@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  # Laravel App
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fotsport-app
+    restart: unless-stopped
+    ports:
+      - "8000:80"
+    volumes:
+      - .:/var/www/html
+      - storage-data:/var/www/html/storage
+    environment:
+      - APP_ENV=production
+      - DB_HOST=db
+      - DB_DATABASE=sports_photos
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+      - FACE_SERVICE_URL=http://face-api:8001
+    depends_on:
+      - db
+      - face-api
+
+  # Banco de Dados
+  db:
+    image: mysql:8.0
+    container_name: fotsport-db
+    restart: unless-stopped
+    environment:
+      - MYSQL_DATABASE=sports_photos
+      - MYSQL_ROOT_PASSWORD=secret
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+  # Serviço de Reconhecimento Facial
+  face-api:
+    build:
+      context: ./face_service
+      dockerfile: Dockerfile
+    container_name: fotsport-face-api
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./face_service:/app
+
+volumes:
+  db-data:
+  storage-data:
