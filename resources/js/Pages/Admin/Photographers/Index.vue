@@ -49,6 +49,7 @@ const toggleStatus = async (photographer) => {
                         <tr class="bg-white border-b border-gray-100">
                             <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Fotógrafo</th>
                             <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Status</th>
+                            <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Último Acesso</th>
                             <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Eventos</th>
                             <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400 text-center">Fotos Vendidas</th>
                             <th class="px-8 py-6 text-[10px] font-black uppercase tracking-widest text-gray-400 text-right">Total Bruto</th>
@@ -77,6 +78,15 @@ const toggleStatus = async (photographer) => {
                                     {{ user.is_active ? 'Ativo' : 'Bloqueado' }}
                                 </span>
                                 <p v-if="user.is_superadmin" class="text-[8px] font-black text-brand-orange uppercase mt-1 italic">SuperAdmin</p>
+                            </td>
+                            <td class="px-8 py-6">
+                                <div v-if="user.last_login_ip">
+                                    <p class="font-black text-brand-dark uppercase tracking-tight">{{ user.last_login_city || 'Cidade Desconhecida' }}</p>
+                                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{{ user.last_login_ip }}</p>
+                                </div>
+                                <div v-else>
+                                    <p class="text-[10px] text-gray-300 font-bold uppercase tracking-widest italic">Nenhum acesso registrado</p>
+                                </div>
                             </td>
                             <td class="px-8 py-6 text-center font-bold text-gray-600">{{ user.events_count }}</td>
                             <td class="px-8 py-6 text-center font-bold text-brand-blue">{{ user.total_sales_count }}</td>

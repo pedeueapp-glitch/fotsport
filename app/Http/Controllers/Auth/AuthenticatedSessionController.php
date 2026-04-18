@@ -34,6 +34,29 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // Rastrear IP e Localização do Fotógrafo
+        $user = Auth::user();
+        if ($user) {
+            $ip = $request->ip();
+            // Ignorar localhost para testes de localização
+            if ($ip === '127.0.0.1' || $ip === '::1') {
+                $ip = '8.8.8.8'; // IP de exemplo para teste local
+            }
+            
+            $user->last_login_ip = $request->ip();
+            
+            try {
+                $response = \Illuminate\Support\Facades\Http::get("http://ip-api.com/json/{$ip}?fields=status,city");
+                if ($response->successful() && $response->json('status') === 'success') {
+                    $user->last_login_city = $response->json('city');
+                }
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Erro ao obter localização por IP: ' . $e->getMessage());
+            }
+            
+            $user->save();
+        }
+
         return redirect()->intended(RouteServiceProvider::HOME);
     }
 

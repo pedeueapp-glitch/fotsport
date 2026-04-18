@@ -74,6 +74,11 @@ const toggleMobileMenu = () => {
                               class="font-black text-[11px] uppercase tracking-widest hover:text-brand-orange transition-all">
                             Financeiro
                         </Link>
+                        <Link :href="route('photographer.support.index')" 
+                              :class="route().current('photographer.support.*') ? 'text-brand-orange' : 'text-gray-600'"
+                              class="font-black text-[11px] uppercase tracking-widest hover:text-brand-orange transition-all">
+                            Suporte
+                        </Link>
                         <!-- Admin Links Desktop -->
                         <template v-if="$page.props.auth.user.is_superadmin">
                             <div class="h-6 w-px bg-gray-100 mx-2"></div>
@@ -96,6 +101,11 @@ const toggleMobileMenu = () => {
                                   :class="route().current('admin.billing.*') ? 'text-brand-orange' : 'text-gray-400'"
                                   class="font-black text-[10px] uppercase tracking-widest hover:text-brand-orange transition-all">
                                 Faturamento
+                            </Link>
+                            <Link :href="route('admin.support.index')" 
+                                  :class="route().current('admin.support.*') ? 'text-brand-orange' : 'text-gray-400'"
+                                  class="font-black text-[10px] uppercase tracking-widest hover:text-brand-orange transition-all">
+                                Suporte ADM
                             </Link>
                             <Link :href="route('admin.settings.index')" 
                                   :class="route().current('admin.settings.*') ? 'text-brand-orange' : 'text-gray-400'"
@@ -165,6 +175,7 @@ const toggleMobileMenu = () => {
                 <template v-if="$page.props.auth.user">
                     <Link :href="route('dashboard')" @click="mobileMenuOpen = false" class="block text-gray-700 font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Meus Eventos</Link>
                     <Link :href="route('financial.index')" @click="mobileMenuOpen = false" class="block text-gray-700 font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Financeiro</Link>
+                    <Link :href="route('photographer.support.index')" @click="mobileMenuOpen = false" class="block text-gray-700 font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Suporte</Link>
                     
                     <!-- Admin Mobile Links -->
                     <template v-if="$page.props.auth.user.is_superadmin">
@@ -172,6 +183,7 @@ const toggleMobileMenu = () => {
                         <Link :href="route('admin.events.index')" @click="mobileMenuOpen = false" class="block text-brand-orange font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Todos Eventos</Link>
                         <Link :href="route('admin.withdrawals.index')" @click="mobileMenuOpen = false" class="block text-brand-orange font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Aprovar Saques</Link>
                         <Link :href="route('admin.billing.index')" @click="mobileMenuOpen = false" class="block text-brand-orange font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Faturamento Global</Link>
+                        <Link :href="route('admin.support.index')" @click="mobileMenuOpen = false" class="block text-brand-orange font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Central de Suporte</Link>
                         <Link :href="route('admin.settings.index')" @click="mobileMenuOpen = false" class="block text-brand-orange font-black text-xs uppercase tracking-widest py-3 border-b border-gray-50">Configurações</Link>
                     </template>
                     

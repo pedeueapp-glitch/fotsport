@@ -3,6 +3,8 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\PhotoController;
+use App\Http\Controllers\Photographer\SupportController as PhotographerSupport;
+use App\Http\Controllers\Admin\SupportController as AdminSupport;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -80,6 +82,22 @@ Route::middleware('auth')->group(function () {
     Route::resource('events', EventController::class);
     Route::post('/events/{event}/photos', [PhotoController::class, 'store'])->name('photos.store');
     Route::delete('/events/{event}/photos/{photo}', [PhotoController::class, 'destroy'])->name('photos.destroy');
+
+    // Suporte para Fotógrafos
+    Route::prefix('photographer/support')->name('photographer.support.')->group(function () {
+        Route::get('/', [PhotographerSupport::class, 'index'])->name('index');
+        Route::post('/', [PhotographerSupport::class, 'store'])->name('store');
+        Route::get('/{ticket}', [PhotographerSupport::class, 'show'])->name('show');
+        Route::post('/{ticket}/message', [PhotographerSupport::class, 'sendMessage'])->name('message');
+    });
+
+    // Administração do Suporte (SuperAdmin)
+    Route::prefix('admin/support')->name('admin.support.')->group(function () {
+        Route::get('/', [AdminSupport::class, 'index'])->name('index');
+        Route::get('/{ticket}', [AdminSupport::class, 'show'])->name('show');
+        Route::post('/{ticket}/message', [AdminSupport::class, 'sendMessage'])->name('message');
+        Route::patch('/{ticket}/toggle', [AdminSupport::class, 'toggleStatus'])->name('toggle');
+    });
 });
 
 require __DIR__.'/auth.php';
