@@ -106,7 +106,7 @@ def search_face(event_id: str = Form(None), file: UploadFile = File(...)):
         face_distances = face_recognition.face_distance(known_encodings, search_encoding)
         matches_with_dist = []
         for i, distance in enumerate(face_distances):
-            if distance <= 0.55:
+            if distance <= 0.6:
                 matches_with_dist.append((known_photo_ids[i], distance))
         
         # Ordena por distância (menor distância = mais parecido)
