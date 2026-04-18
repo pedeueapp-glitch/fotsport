@@ -66,4 +66,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(Withdrawal::class);
     }
+
+    public function supportTickets()
+    {
+        return $this->hasMany(SupportTicket::class);
+    }
 }
