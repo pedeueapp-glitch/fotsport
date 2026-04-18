@@ -251,7 +251,7 @@ class StoreController extends Controller
             }
         }
 
-        return Inertia::render('Store/Success');
+        return redirect()->route('customer.dashboard')->with('success', 'Pagamento processado! Suas fotos já estão disponíveis para download.');
     }
 
     public function photographerPortfolio(string $slug)

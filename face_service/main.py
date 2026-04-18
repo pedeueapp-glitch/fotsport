@@ -103,9 +103,22 @@ def search_face(event_id: str = Form(None), file: UploadFile = File(...)):
         known_photo_ids.append(val["photo_id"])
         
     if known_encodings:
-        results = face_recognition.compare_faces(known_encodings, search_encoding, tolerance=0.65)
-        for i, match in enumerate(results):
-            if match:
-                matches.append(known_photo_ids[i])
+        face_distances = face_recognition.face_distance(known_encodings, search_encoding)
+        matches_with_dist = []
+        for i, distance in enumerate(face_distances):
+            if distance <= 0.55:
+                matches_with_dist.append((known_photo_ids[i], distance))
+        
+        # Ordena por distância (menor distância = mais parecido)
+        matches_with_dist.sort(key=lambda x: x[1])
+        matches = [m[0] for m in matches_with_dist]
                 
-    return {"matches": list(set(matches))}
+    # Remove duplicatas mantendo a ordem (set remove a ordem, então usamos OrderedDict ou loop)
+    seen = set()
+    unique_matches = []
+    for m in matches:
+        if m not in seen:
+            unique_matches.append(m)
+            seen.add(m)
+
+    return {"matches": unique_matches}

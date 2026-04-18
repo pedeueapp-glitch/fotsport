@@ -39,12 +39,21 @@ class CustomerDashboardController extends Controller
 
         $photo = $purchase->photo;
         
-        if (!$photo || !Storage::exists($photo->original_path)) {
-            abort(404, 'Arquivo não encontrado.');
+        if (!$photo) {
+            abort(404, 'Foto não encontrada.');
         }
 
-        return Storage::download($photo->original_path, "foto-{$photo->id}.jpg");
+        // Limpar o prefixo 'storage/' do caminho original para buscar no disco 'public'
+        $path = str_replace('storage/', '', $photo->original_path);
+
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+            \Illuminate\Support\Facades\Log::error('Download 404: Arquivo inexistente no disco público', ['path' => $path, 'db_path' => $photo->original_path]);
+            abort(404, 'Arquivo físico não encontrado no servidor.');
+        }
+
+        return \Illuminate\Support\Facades\Storage::disk('public')->download($path, "foto-fotsport-{$photo->id}.jpg");
     }
+
 
     public function cancel(Purchase $purchase)
     {

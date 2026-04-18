@@ -188,13 +188,14 @@ const totalSalesVolume = computed(() => {
                         </div>
                         
                         <div class="max-w-md bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-[2rem]">
-                            <h4 class="font-black text-xs uppercase tracking-widest text-white/50 mb-6">Solicitar Saque</h4>
+                            <h4 class="font-black text-xs uppercase tracking-widest text-white/50 mb-6">Solicitar Saque (Mínimo R$ 5,00)</h4>
                             <form @submit.prevent="requestWithdraw" class="flex flex-col sm:flex-row gap-4">
                                 <div class="relative flex-grow">
                                     <span class="absolute left-6 top-1/2 -translate-y-1/2 text-brand-orange font-black text-xl">R$</span>
                                     <input
                                         type="number"
                                         step="0.01"
+                                        min="5"
                                         v-model="withdrawForm.amount"
                                         class="w-full pl-16 pr-6 py-5 bg-white text-brand-dark font-black text-2xl rounded-2xl border-0 focus:ring-4 focus:ring-brand-blue/30 transition-all"
                                         placeholder="0,00"

@@ -52,7 +52,7 @@ class FinancialController extends Controller
     public function withdraw(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:10|max:1000000'
+            'amount' => 'required|numeric|min:5|max:1000000'
         ]);
 
         $user = auth()->user();
