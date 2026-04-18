@@ -34,6 +34,6 @@ class CustomerAuthController extends Controller
 
         Auth::guard('customer')->login($customer);
 
-        return redirect()->route('customer.dashboard')->with('success', 'Bem-vindo de volta!');
+        return redirect()->intended(route('customer.dashboard'))->with('success', 'Bem-vindo de volta!');
     }
 }

@@ -43,11 +43,15 @@ class StoreController extends Controller
             }
 
             $response = Http::timeout(60)
-                ->attach('file', file_get_contents($file->getRealPath()), 'selfie.jpg')
+                ->attach('file', fopen($file->getRealPath(), 'r'), 'selfie.jpg')
                 ->post('http://face-api:8001/search_face/', $postData);
 
             if ($response->successful()) {
                 $matchIds = $response->json()['matches'] ?? [];
+                Log::info('Busca facial concluída', [
+                    'matches_count' => count($matchIds),
+                    'matches' => $matchIds
+                ]);
                 
                 // Limit matches to a reasonable amount
                 $matchIds = array_slice($matchIds, 0, 100);
@@ -56,6 +60,12 @@ class StoreController extends Controller
                 session(['last_search_ids' => $matchIds]);
 
                 return redirect()->route('store.search.results');
+            } else {
+                Log::error('Falha na resposta da busca facial', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return back()->withErrors(['photo' => 'O serviço de reconhecimento facial não respondeu corretamente.']);
             }
         } catch (\Exception $e) {
             Log::error('Erro no search_face: ' . $e->getMessage());
@@ -66,15 +76,26 @@ class StoreController extends Controller
 
     public function showSearchResults()
     {
-        $matchIds = session('last_search_ids');
+        $matchIds = session('last_search_ids', []);
 
-        if (!$matchIds) {
-            return redirect()->route('store.index');
+        if (empty($matchIds)) {
+            Log::warning('Nenhum ID encontrado na sessão para os resultados da busca.');
+            return redirect()->route('store.index')->with('error', 'Nenhuma foto encontrada.');
         }
 
-        $photos = Photo::with(['event', 'user'])->whereIn('id', $matchIds)->get();
+        // Recupera as fotos respeitando a ordem de relevância retornada pela IA
+        $idsString = implode(',', $matchIds);
+        $photos = Photo::whereIn('id', $matchIds)
+            ->with('event')
+            ->orderByRaw("FIELD(id, $idsString)")
+            ->get();
 
-        return Inertia::render('Store/Results', [
+        Log::info('Fotos recuperadas do banco para exibição', [
+            'ids_solicitados' => count($matchIds),
+            'fotos_encontradas' => $photos->count()
+        ]);
+
+        return inertia('Store/Results', [
             'photos' => $photos
         ]);
     }

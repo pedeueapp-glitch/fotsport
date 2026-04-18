@@ -22,12 +22,15 @@ class FinancialController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $withdrawal_fee = (float) \App\Models\Setting::where('key', 'withdrawal_fee')->value('value') ?: 15.0;
+
         return Inertia::render('Photographer/Financial', [
             'balance' => (float) $user->balance,
             'pix_key' => $user->pix_key,
             'document' => $user->document,
             'withdrawals' => $withdrawals,
-            'sales' => $sales
+            'sales' => $sales,
+            'withdrawal_fee_percentage' => $withdrawal_fee
         ]);
     }
 
@@ -67,8 +70,10 @@ class FinancialController extends Controller
         $user->balance -= $amount;
         $user->save();
 
-        // 15% Platform fee
-        $fee = $amount * 0.15;
+        // Get dynamic fee from DB
+        $feePercentage = (float) \App\Models\Setting::where('key', 'withdrawal_fee')->value('value') ?: 15.0;
+        
+        $fee = $amount * ($feePercentage / 100);
         $net = $amount - $fee;
 
         Withdrawal::create([

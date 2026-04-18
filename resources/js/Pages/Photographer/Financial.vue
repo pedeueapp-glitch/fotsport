@@ -31,7 +31,8 @@ const props = defineProps({
     sales: {
         type: Array,
         default: () => []
-    }
+    },
+    withdrawal_fee_percentage: Number
 });
 
 const pixForm = useForm({
@@ -204,7 +205,7 @@ const totalSalesVolume = computed(() => {
                                     Sacar
                                 </button>
                             </form>
-                            <p class="text-[10px] text-white/40 mt-4 font-medium uppercase tracking-widest">A plataforma retém 15% de taxa operacional.</p>
+                            <p class="text-[10px] text-white/40 mt-4 font-medium uppercase tracking-widest">A plataforma retém {{ withdrawal_fee_percentage }}% de taxa operacional.</p>
                             
                             <div v-if="withdrawForm.errors.amount" class="mt-4 p-4 bg-red-500/20 text-red-200 text-xs font-bold rounded-xl border border-red-500/30">
                                 {{ withdrawForm.errors.amount }}
@@ -339,7 +340,7 @@ const totalSalesVolume = computed(() => {
                             <tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-200">
                                 <th class="pb-6 pl-4">Data da Solicitação</th>
                                 <th class="pb-6">Valor Bruto</th>
-                                <th class="pb-6">Taxa (15%)</th>
+                                <th class="pb-6">Taxa ({{ withdrawal_fee_percentage }}%)</th>
                                 <th class="pb-6">Total Líquido</th>
                                 <th class="pb-6 pr-4">Status do Saque</th>
                             </tr>

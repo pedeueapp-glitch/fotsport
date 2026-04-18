@@ -54,8 +54,28 @@ Route::middleware('auth')->group(function () {
     Route::post('/financial/withdraw', [\App\Http\Controllers\Photographer\FinancialController::class, 'withdraw'])->name('financial.withdraw');
     
     // SuperAdmin
-    Route::get('/admin/withdrawals', [\App\Http\Controllers\Admin\WithdrawalController::class, 'index'])->name('admin.withdrawals.index');
-    Route::post('/admin/withdrawals/{withdrawal}/authorize', [\App\Http\Controllers\Admin\WithdrawalController::class, 'authorizeTransfer'])->name('admin.withdrawals.authorize');
+    Route::prefix('admin')->group(function () {
+        Route::get('/withdrawals', [\App\Http\Controllers\Admin\WithdrawalController::class, 'index'])->name('admin.withdrawals.index');
+        Route::post('/withdrawals/{withdrawal}/authorize', [\App\Http\Controllers\Admin\WithdrawalController::class, 'authorizeTransfer'])->name('admin.withdrawals.authorize');
+        
+        // Gestão de Fotógrafos
+        Route::get('/photographers', [\App\Http\Controllers\Admin\AdminController::class, 'photographers'])->name('admin.photographers.index');
+        Route::get('/photographers/{user}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editPhotographer'])->name('admin.photographers.edit');
+        Route::patch('/photographers/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'updatePhotographer'])->name('admin.photographers.update');
+        
+        // Gestão de Eventos
+        Route::get('/events', [\App\Http\Controllers\Admin\AdminController::class, 'events'])->name('admin.events.index');
+        Route::get('/events/{event}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editEvent'])->name('admin.events.edit');
+        Route::patch('/events/{event}', [\App\Http\Controllers\Admin\AdminController::class, 'updateEvent'])->name('admin.events.update');
+        Route::delete('/events/{event}', [\App\Http\Controllers\Admin\AdminController::class, 'deleteEvent'])->name('admin.events.destroy');
+        
+        // Faturamento
+        Route::get('/billing', [\App\Http\Controllers\Admin\AdminController::class, 'billing'])->name('admin.billing.index');
+
+        // Configurações
+        Route::get('/settings', [\App\Http\Controllers\Admin\AdminController::class, 'settings'])->name('admin.settings.index');
+        Route::patch('/settings', [\App\Http\Controllers\Admin\AdminController::class, 'updateSettings'])->name('admin.settings.update');
+    });
     
     Route::resource('events', EventController::class);
     Route::post('/events/{event}/photos', [PhotoController::class, 'store'])->name('photos.store');

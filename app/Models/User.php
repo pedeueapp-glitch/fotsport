@@ -23,6 +23,7 @@ class User extends Authenticatable
         'email',
         'password',
         'is_superadmin',
+        'is_active',
         'balance',
         'pix_key',
         'document',
@@ -52,6 +53,8 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'is_superadmin' => 'boolean',
+        'is_active' => 'boolean',
     ];
 
     public function events()

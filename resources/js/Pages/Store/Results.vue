@@ -36,10 +36,6 @@ const form = useForm({
 });
 
 const checkout = () => {
-    if (!usePage().props.auth.customer) {
-        window.dispatchEvent(new CustomEvent('show-customer-login'));
-        return;
-    }
     form.photo_ids = selectedPhotos.value;
     form.post(route('store.checkout'), {
         preserveScroll: true,

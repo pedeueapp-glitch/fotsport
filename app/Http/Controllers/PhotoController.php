@@ -14,26 +14,36 @@ class PhotoController extends Controller
 {
     public function store(Request $request, Event $event)
     {
-        // Previne timeout em uploads em lote (batch) no php artisan serve (que é single-thread)
+        // Previne timeout em uploads em lote
         set_time_limit(0);
 
         $request->validate([
-            'photos' => 'required|array|max:10',
-            'photos.*' => 'required|image|max:10240', // 10MB max
+            'photos' => 'required|array|max:20',
+            'photos.*' => 'required|file|mimes:jpeg,jpg|max:20480', // Apenas JPEG/JPG aceitos
             'price' => 'nullable|numeric|min:0|max:10000'
         ]);
 
         foreach ($request->file('photos') as $file) {
-            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $filename = Str::uuid() . '.jpg';
 
-            // Save original securely
-            $originalPath = $file->storeAs('photos/original', $filename, 'local');
+            // --- 1. PROCESSAR E SALVAR ORIGINAL OTIMIZADA ---
+            $optimizedOriginal = Image::make($file);
+            
+            $optimizedOriginal->resize(2500, 2500, function ($constraint) {
+                $constraint->aspectRatio();
+                $constraint->upsize();
+            });
 
-            // Create watermark version and resize to low resolution
+            $originalDir = 'photos/original';
+            Storage::disk('public')->makeDirectory($originalDir);
+            $originalPath = $originalDir . '/' . $filename;
+            
+            Storage::disk('public')->put($originalPath, (string) $optimizedOriginal->encode('jpg', 82));
+
+            // --- 2. CRIAR VERSÃO COM MARCA D'ÁGUA (Low Res) ---
             $image = Image::make($file);
             
-            // Resize image to max 1000px width/height to make process incredibly fast and prevent theft
-            $image->resize(1000, 1000, function ($constraint) {
+            $image->resize(1200, 1200, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
@@ -54,7 +64,7 @@ class PhotoController extends Controller
                 }
             }
             
-            // Desenha as listas protetoras Diagonais com alternância grosso x fino
+            // Desenha as listas protetoras Diagonais
             $diagonalSpan = $width + $height;
             $counter = 0;
             for ($i = 0; $i < $diagonalSpan; $i += $width / 12) {
@@ -70,7 +80,7 @@ class PhotoController extends Controller
                 }
             }
             
-            // Marca d'água principal MASSIVA centralizada
+            // Marca d'água principal MASSIVA
             $image->text('FOTSPORT', $width / 2, $height / 2, function($font) use ($width) {
                 $font->size(max($width / 4, 100));
                 $font->color([255, 255, 255, 0.9]);
@@ -79,7 +89,7 @@ class PhotoController extends Controller
                 $font->angle(25);
             });
 
-            // Adiciona texto obrigatório no rodapé / base do centro
+            // Texto obrigatório no rodapé
             $image->text('FOTO NÃO COMERCIALIZADA', $width / 2, ($height / 2) + (max($width / 4, 100) / 1.5), function($font) use ($width) {
                 $font->size(max($width / 15, 30));
                 $font->color([255, 255, 255, 0.9]);
@@ -87,47 +97,55 @@ class PhotoController extends Controller
                 $font->valign('center');
             });
 
-            $watermarkPath = 'public/photos/watermarked/' . $filename;
+            $watermarkDir = 'photos/watermarked';
+            Storage::disk('public')->makeDirectory($watermarkDir);
+            $watermarkPath = $watermarkDir . '/' . $filename;
             
-            Storage::disk('local')->put($watermarkPath, (string) $image->encode('jpg', 60));
+            // SALVA A IMAGEM COM MARCA D'ÁGUA
+            Storage::disk('public')->put($watermarkPath, (string) $image->encode('jpg', 60));
 
-            // Save to DB — registra qual fotógrafo enviou ESTA foto
+            // Salva no Banco de Dados
             $photoModel = $event->photos()->create([
                 'user_id'          => auth()->id(),
-                'original_path'    => $originalPath,
-                'watermarked_path' => str_replace('public/', 'storage/', $watermarkPath),
+                'original_path'    => 'storage/' . $originalPath,
+                'watermarked_path' => 'storage/' . $watermarkPath,
                 'price'            => $request->input('price', 5.00),
             ]);
 
             try {
-                Http::timeout(60)
-                    ->attach('file', fopen($originalPath ? storage_path('app/' . $originalPath) : $file->getRealPath(), 'r'), $filename)
+                $indexResponse = Http::timeout(60)
+                    ->attach('file', fopen(storage_path('app/public/' . $originalPath), 'r'), $filename)
                     ->post('http://face-api:8001/index_photo/', [
                         'photo_id' => $photoModel->id,
                         'event_id' => $event->id
                     ]);
+                
+                if (!$indexResponse->successful()) {
+                    \Illuminate\Support\Facades\Log::error('Falha na indexação facial: ' . $indexResponse->status() . ' - ' . $indexResponse->body());
+                } else {
+                    \Illuminate\Support\Facades\Log::info('Foto indexada com sucesso: ' . $photoModel->id);
+                }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Erro ao indexar face: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Exceção ao indexar face: ' . $e->getMessage());
             }
         }
 
-        return back()->with('message', 'Fotos enviadas com sucesso!');
+        return back()->with('message', 'Fotos otimizadas e enviadas com sucesso!');
     }
 
     public function destroy(Event $event, Photo $photo)
     {
-        // Só o fotógrafo que enviou esta foto pode deletá-la
-        if ($photo->user_id !== auth()->id() && $photo->event_id !== $event->id) {
+        // Só o fotógrafo que enviou esta foto ou o SuperAdmin pode deletá-la
+        if (!auth()->user()->is_superadmin && $photo->user_id !== auth()->id()) {
             abort(403);
         }
 
         // Deletar do disco
         if ($photo->original_path) {
-            Storage::disk('local')->delete($photo->original_path);
+            Storage::disk('public')->delete(str_replace('storage/', '', $photo->original_path));
         }
         
-        $watermarkVirtualPath = str_replace('storage/', 'public/', $photo->watermarked_path);
-        Storage::disk('local')->delete($watermarkVirtualPath);
+        Storage::disk('public')->delete(str_replace('storage/', '', $photo->watermarked_path));
 
         // Deletar do BD
         $photo->delete();

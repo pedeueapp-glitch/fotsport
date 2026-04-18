@@ -46,11 +46,6 @@ const checkoutForm = useForm({ photo_ids: [] });
 const checkout = () => {
     if (checkoutForm.processing) return;
 
-    if (!usePage().props.auth.customer) {
-        window.dispatchEvent(new CustomEvent('show-customer-login'));
-        return;
-    }
-
     checkoutForm.photo_ids = selectedPhotos.value;
     checkoutForm.post(route('store.checkout'), {
         preserveScroll: true,
@@ -201,15 +196,15 @@ const portfolioUrl = (user) => {
                     </div>
 
                     <!-- Paginação Superior Minimalista -->
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
                         <Link v-for="link in photos.links" :key="link.label"
                               :href="link.url ?? '#'"
-                              v-html="link.label"
+                              v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
                               :class="{
-                                  'px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all': true,
-                                  'bg-brand-dark text-white': link.active,
-                                  'bg-gray-50 text-gray-400 hover:bg-gray-100': !link.active && link.url,
-                                  'opacity-30 cursor-not-allowed': !link.url
+                                  'min-w-[40px] h-10 flex items-center justify-center rounded-xl text-[10px] font-black uppercase transition-all': true,
+                                  'bg-brand-dark text-white shadow-lg': link.active,
+                                  'text-gray-400 hover:bg-white hover:text-brand-orange': !link.active && link.url,
+                                  'opacity-20 pointer-events-none': !link.url
                               }"
                         />
                     </div>
@@ -263,14 +258,14 @@ const portfolioUrl = (user) => {
                         <div class="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 bg-white px-8 text-[10px] text-gray-300 font-black uppercase tracking-[0.4em]">Navegação Galeria</div>
                     </div>
                     
-                    <div class="flex flex-wrap justify-center items-center gap-2 px-4 py-3 bg-gray-50 border border-gray-100 rounded-[2rem] shadow-sm">
+                    <div class="flex flex-wrap justify-center items-center gap-2 px-3 py-3 bg-white border border-gray-100 rounded-[2rem] shadow-xl">
                         <Link v-for="link in photos.links" :key="link.label"
                               :href="link.url ?? '#'"
-                              v-html="link.label"
+                              v-html="link.label.replace('&laquo; Previous', 'Anterior').replace('Next &raquo;', 'Próxima')"
                               :class="{
-                                  'min-w-[44px] h-11 flex items-center justify-center rounded-2xl text-[10px] font-black transition-all duration-300': true,
-                                  'bg-brand-orange text-white shadow-xl shadow-brand-orange/20 scale-110 z-10': link.active,
-                                  'text-gray-500 hover:bg-white hover:text-brand-orange hover:shadow-lg': !link.active && link.url,
+                                  'px-6 h-12 flex items-center justify-center rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300': true,
+                                  'bg-brand-orange text-white shadow-xl shadow-brand-orange/20 scale-105 z-10': link.active,
+                                  'text-gray-400 hover:bg-gray-50 hover:text-brand-dark': !link.active && link.url,
                                   'opacity-20 pointer-events-none': !link.url
                               }"
                         />

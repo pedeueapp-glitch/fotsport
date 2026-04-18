@@ -23,8 +23,9 @@ if ($LASTEXITCODE -ne 0) {
 # 2. Criar pacote e enviar
 Write-Host "[2/4] Enviando pacote para a VPS..." -ForegroundColor Yellow
 if (Test-Path "deploy.tar.gz") { Remove-Item "deploy.tar.gz" }
-# INCLUINDO A PASTA docker NO TAR
-tar -czf deploy.tar.gz docker public/build Dockerfile docker-compose.yml .env app resources routes config database bootstrap
+if (Test-Path "public/storage") { Remove-Item -Recurse -Force "public/storage" }
+# INCLUINDO A PASTA PUBLIC INTEIRA E ARQUIVOS DA RAIZ
+tar -czf deploy.tar.gz docker face_service public Dockerfile docker-compose.yml .env app resources routes config database bootstrap composer.json composer.lock package.json artisan vite.config.js tailwind.config.js
 scp deploy.tar.gz "${VpsUser}@${VpsIP}:${VpsPath}/"
 
 # 3. Extrair e Reconstruir na VPS
@@ -36,12 +37,12 @@ $Cmd4 = "rm deploy.tar.gz"
 $Cmd5 = "docker compose down"
 $Cmd6 = "docker compose build --no-cache app"
 $Cmd7 = "docker compose up -d"
-$RemoteRebuild = $Cmd1 + "; " + $Cmd2 + "; " + $Cmd3 + "; " + $Cmd4 + "; " + $Cmd5 + "; " + $Cmd6 + "; " + $Cmd7
+$RemoteRebuild = $Cmd1 + "; " + $Cmd2 + "; " + $Cmd3 + "; " + $Cmd4 + "; " + $Cmd5 + "; " + $Cmd6 + "; " + $Cmd7 + "; sleep 10"
 ssh ${VpsUser}@${VpsIP} "$RemoteRebuild"
 
 # 4. Forcar permissoes e migracao
 Write-Host "[4/4] Forcando permissoes e migracoes..." -ForegroundColor Yellow
-$FixCommand = "docker exec fotsport-app sh -c 'chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache && php artisan migrate --force'"
+$FixCommand = "docker exec fotsport-app sh -c 'rm -rf public/storage && ln -snf ../storage/app/public public/storage && chown -R www-data:www-data storage bootstrap/cache && chmod -R 777 storage bootstrap/cache && php artisan migrate --force'"
 ssh ${VpsUser}@${VpsIP} "$FixCommand"
 
 # Limpeza local

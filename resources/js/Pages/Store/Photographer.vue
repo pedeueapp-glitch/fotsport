@@ -204,11 +204,14 @@ onUnmounted(() => window.removeEventListener('keydown', handleKeydown));
                 </div>
 
                 <!-- Paginação Premium -->
-                <div v-if="photos.links && photos.links.length > 3" class="mt-24 flex justify-center gap-3">
+                <div v-if="photos.links && photos.links.length > 3" class="mt-24 flex justify-center flex-wrap gap-2">
                     <template v-for="(link, key) in photos.links" :key="key">
-                        <Link v-if="link.url" :href="link.url" v-html="link.label"
-                               class="w-12 h-12 flex items-center justify-center rounded-2xl border-2 transition-all duration-300 font-black text-xs uppercase"
-                               :class="link.active ? 'bg-brand-blue border-brand-blue text-white shadow-xl shadow-brand-blue/20' : 'bg-white border-gray-100 text-gray-400 hover:border-brand-orange hover:text-brand-orange'">
+                        <Link v-if="link.url" :href="link.url" 
+                               v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
+                               class="min-w-[48px] h-12 flex items-center justify-center rounded-2xl border-2 transition-all duration-300 font-black text-[10px] uppercase px-4"
+                               :class="link.active 
+                                 ? 'bg-brand-orange border-brand-orange text-white shadow-xl shadow-brand-orange/20 scale-105 z-10' 
+                                 : 'bg-white border-gray-100 text-gray-400 hover:border-brand-blue hover:text-brand-blue'">
                         </Link>
                     </template>
                 </div>
