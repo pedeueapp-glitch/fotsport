@@ -41,6 +41,8 @@ class HandleInertiaRequests extends Middleware
                 'checkout_data' => fn () => $request->session()->get('checkout_data'),
                 'needs_registration' => fn () => $request->session()->get('needs_registration'),
                 'show_login' => fn () => $request->session()->get('show_login'),
+                'trigger_checkout' => fn () => $request->session()->get('trigger_checkout'),
+                'pending_checkout_photos' => fn () => $request->session()->get('pending_checkout_photos'),
             ],
             'ziggy' => function () use ($request) {
                 return array_merge((new Ziggy)->toArray(), [

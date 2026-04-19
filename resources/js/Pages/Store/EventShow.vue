@@ -21,6 +21,19 @@ watch(() => usePage().props.flash?.checkout_data, (newVal) => {
     }
 }, { immediate: true });
 
+// Recupera fotos da sessão após login e dispara checkout
+watch(() => usePage().props.flash?.pending_checkout_photos, (newVal) => {
+    if (newVal && newVal.length > 0) {
+        selectedPhotos.value = [...newVal];
+    }
+}, { immediate: true });
+
+watch(() => usePage().props.flash?.trigger_checkout, (newVal) => {
+    if (newVal) {
+        checkout();
+    }
+}, { immediate: true });
+
 // ── Busca por face ────────────────────────────────────────────────────────────
 const searchForm = useForm({
     selfie: null,
@@ -80,7 +93,15 @@ const portfolioUrl = (user) => {
 </script>
 
 <template>
-    <Head :title="`${event.name} | Fotsport`" />
+    <Head>
+        <title>{{ `${event.name} | Fotsport` }}</title>
+        <meta name="description" content="Confira as fotos do evento {{ event.name }} realizado em {{ event.location }}. Busque seus cliques por número de peito ou reconhecimento facial.">
+        <meta name="keywords" content="fotos {{ event.name }}, {{ event.location }}, fotos de corrida {{ event.date }}, fotsport {{ event.name }}">
+        
+        <meta property="og:title" content="{{ `${event.name} | Fotsport` }}" />
+        <meta property="og:description" content="Veja suas fotos do evento {{ event.name }}. Garanta sua memória agora!" />
+        <meta v-if="photos.data && photos.data.length > 0" property="og:image" :content="'/' + photos.data[0].watermarked_path" />
+    </Head>
 
     <div class="min-h-screen bg-white flex flex-col font-sans text-brand-dark">
         <Navbar />
@@ -139,7 +160,7 @@ const portfolioUrl = (user) => {
                             <p class="text-gray-500 font-medium leading-relaxed mb-8">
                                 Nossa inteligência artificial analisa milhares de registros para encontrar você. Basta enviar uma selfie clara.
                             </p>
-                            <div class="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest italic">
+                            <div class="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                                 <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Rápido</span>
                                 <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Seguro</span>
                                 <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Preciso</span>
@@ -199,7 +220,7 @@ const portfolioUrl = (user) => {
                     <div class="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
                         <Link v-for="link in photos.links" :key="link.label"
                               :href="link.url ?? '#'"
-                              v-html="link.label.replace('&laquo; Previous', '←').replace('Next &raquo;', '→')"
+                              v-html="link.label.toLowerCase().includes('prev') ? '←' : (link.label.toLowerCase().includes('next') ? '→' : link.label)"
                               :class="{
                                   'min-w-[40px] h-10 flex items-center justify-center rounded-xl text-[10px] font-black uppercase transition-all': true,
                                   'bg-brand-dark text-white shadow-lg': link.active,
@@ -261,7 +282,7 @@ const portfolioUrl = (user) => {
                     <div class="flex flex-wrap justify-center items-center gap-2 px-3 py-3 bg-white border border-gray-100 rounded-[2rem] shadow-xl">
                         <Link v-for="link in photos.links" :key="link.label"
                               :href="link.url ?? '#'"
-                              v-html="link.label.replace('&laquo; Previous', 'Anterior').replace('Next &raquo;', 'Próxima')"
+                              v-html="link.label.toLowerCase().includes('prev') ? 'Anterior' : (link.label.toLowerCase().includes('next') ? 'Próxima' : link.label)"
                               :class="{
                                   'px-6 h-12 flex items-center justify-center rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all duration-300': true,
                                   'bg-brand-orange text-white shadow-xl shadow-brand-orange/20 scale-105 z-10': link.active,
@@ -271,7 +292,7 @@ const portfolioUrl = (user) => {
                         />
                     </div>
                     
-                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest italic">Página {{ photos.current_page }} de {{ photos.last_page }}</p>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">Página {{ photos.current_page }} de {{ photos.last_page }}</p>
                 </div>
             </div>
         </main>

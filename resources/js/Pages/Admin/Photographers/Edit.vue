@@ -1,7 +1,6 @@
-<script setup>
+﻿<script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import Navbar from '@/Components/Navbar.vue';
-import Footer from '@/Components/Footer.vue';
+import AdminSidebarLayout from '@/Layouts/AdminSidebarLayout.vue';
 import { alert } from '@/utils/swal';
 
 const props = defineProps({
@@ -27,55 +26,53 @@ const submit = () => {
 <template>
     <Head :title="`Editar: ${photographer.name}`" />
 
-    <div class="min-h-screen bg-white flex flex-col font-sans text-brand-dark">
-        <Navbar />
+    <AdminSidebarLayout title="Editar Perfil" subtitle="Gestão global de acessos e permissões.">
+        <template #actions>
+            <div v-if="photographer.avatar" class="w-12 h-12 rounded-xl overflow-hidden border-2 border-white shadow-sm ring-1 ring-gray-100">
+                <img :src="photographer.avatar.startsWith('http') ? photographer.avatar : (photographer.avatar.startsWith('storage/') ? '/' + photographer.avatar : '/storage/' + photographer.avatar)" 
+                     class="w-full h-full object-cover" />
+            </div>
+        </template>
 
-        <main class="flex-grow max-w-2xl mx-auto px-4 py-20 w-full">
-            <header class="mb-12 flex items-center gap-6">
-                <div v-if="photographer.avatar" class="w-20 h-20 rounded-3xl overflow-hidden shadow-2xl border-4 border-white shrink-0">
-                    <img :src="photographer.avatar.startsWith('http') ? photographer.avatar : (photographer.avatar.startsWith('storage/') ? '/' + photographer.avatar : '/storage/' + photographer.avatar)" 
-                         class="w-full h-full object-cover" />
-                </div>
-                <div>
-                    <h1 class="text-3xl font-black text-brand-dark uppercase tracking-tighter">Editar <span class="text-brand-orange">Fotógrafo</span></h1>
-                    <p class="text-gray-400 font-medium italic">Edição global de perfil e permissões.</p>
-                </div>
-            </header>
-
-            <form @submit.prevent="submit" class="space-y-8 bg-gray-50 p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Nome Completo</label>
-                    <input v-model="form.name" type="text" class="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold shadow-sm focus:ring-2 focus:ring-brand-blue" required />
+        <div class="max-w-2xl">
+            <form @submit.prevent="submit" class="space-y-6 bg-gray-50 p-8 rounded-xl border border-gray-100 shadow-sm italic">
+                <div class="space-y-2">
+                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Nome Completo</label>
+                    <input v-model="form.name" type="text" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" required />
                 </div>
 
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">E-mail de Acesso</label>
-                    <input v-model="form.email" type="email" class="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold shadow-sm focus:ring-2 focus:ring-brand-blue" required />
+                <div class="space-y-2">
+                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest italic ml-1">E-mail de Acesso</label>
+                    <input v-model="form.email" type="email" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" required />
                 </div>
 
-                <div class="grid grid-cols-2 gap-6">
-                    <div class="p-6 bg-white rounded-2xl flex items-center justify-between">
-                        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Conta Ativa</span>
-                        <input v-model="form.is_active" type="checkbox" class="w-6 h-6 rounded-lg text-brand-blue border-gray-100 focus:ring-brand-blue" />
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-white rounded-xl border border-gray-100 flex items-center justify-between shadow-sm">
+                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest italic">Conta Ativa</span>
+                        <input v-model="form.is_active" type="checkbox" class="w-5 h-5 rounded text-brand-blue border-gray-200 focus:ring-brand-blue/10" />
                     </div>
-                    <div class="p-6 bg-white rounded-2xl flex items-center justify-between">
-                        <span class="text-[10px] font-black text-brand-orange uppercase tracking-widest">SuperAdmin</span>
-                        <input v-model="form.is_superadmin" type="checkbox" class="w-6 h-6 rounded-lg text-brand-orange border-gray-100 focus:ring-brand-orange" />
+                    <div class="p-4 bg-white rounded-xl border border-gray-100 flex items-center justify-between shadow-sm">
+                        <span class="text-[9px] font-black text-brand-orange uppercase tracking-widest italic">SuperAdmin</span>
+                        <input v-model="form.is_superadmin" type="checkbox" class="w-5 h-5 rounded text-brand-orange border-gray-200 focus:ring-brand-orange/10" />
                     </div>
                 </div>
 
-                <div class="pt-6 border-t border-gray-200 space-y-6">
-                    <p class="text-[10px] font-black text-red-400 uppercase tracking-widest">Alterar Senha (Opcional)</p>
-                    <input v-model="form.password" type="password" placeholder="Nova senha" class="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold shadow-sm focus:ring-2 focus:ring-brand-blue" />
-                    <input v-model="form.password_confirmation" type="password" placeholder="Confirmar nova senha" class="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold shadow-sm focus:ring-2 focus:ring-brand-blue" />
+                <div class="pt-6 border-t border-gray-200 space-y-4">
+                    <p class="text-[9px] font-black text-red-400 uppercase tracking-widest italic ml-1">Alterar Senha (Opcional)</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input v-model="form.password" type="password" placeholder="Nova senha" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" />
+                        <input v-model="form.password_confirmation" type="password" placeholder="Confirmar nova senha" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" />
+                    </div>
                 </div>
 
-                <button :disabled="form.processing" class="w-full py-5 bg-brand-dark text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all">
-                    Salvar Alterações
-                </button>
+                <div class="pt-4">
+                    <button :disabled="form.processing" class="w-full py-4 bg-brand-dark text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl active:scale-95 transition-all">
+                        {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
+                    </button>
+                </div>
             </form>
-        </main>
-
-        <Footer />
-    </div>
+        </div>
+    </AdminSidebarLayout>
 </template>
+
+

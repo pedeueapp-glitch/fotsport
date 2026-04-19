@@ -34,6 +34,8 @@ class User extends Authenticatable
         'instagram',
         'facebook',
         'bio',
+        'last_login_ip',
+        'last_login_city',
     ];
 
     /**

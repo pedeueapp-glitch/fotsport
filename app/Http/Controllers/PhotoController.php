@@ -51,48 +51,72 @@ class PhotoController extends Controller
             $width = $image->width();
             $height = $image->height();
             
-            // Múltiplas marcas em grid textual diagonal
-            for ($x = 0; $x <= $width; $x += $width / 3) {
-                for ($y = 0; $y <= $height; $y += $height / 4) {
-                    $image->text('FOTSPORT', $x, $y, function($font) use ($width) {
-                        $font->size(max($width / 8, 40)); 
-                        $font->color([255, 255, 255, 0.5]); 
-                        $font->align('center');
-                        $font->valign('center');
-                        $font->angle(35);
+            // ─── 2.1 DESENHAR LINHAS EM "X" GROSSAS ──────────────────────────────
+            $lineColor = [255, 255, 255, 0.35];
+            $spacing = $width / 6; // Espaçamento entre as linhas
+            
+            // Linhas Diagonais ( \ )
+            for ($i = -$height; $i < $width; $i += $spacing) {
+                for ($thickness = -3; $thickness <= 3; $thickness++) { // Linha de 7px de espessura
+                    $image->line($i + $thickness, 0, $i + $height + $thickness, $height, function ($draw) use ($lineColor) {
+                        $draw->color($lineColor);
                     });
                 }
             }
-            
-            // Desenha as listas protetoras Diagonais
-            $diagonalSpan = $width + $height;
-            $counter = 0;
-            for ($i = 0; $i < $diagonalSpan; $i += $width / 12) {
-                $counter++;
-                $isThick = ($counter % 2 === 0);
-                $thicknessLoops = $isThick ? 6 : 1;
 
-                for ($t = 0; $t < $thicknessLoops; $t++) {
-                    $offset = $i + $t;
-                    $image->line($offset, 0, $offset - $height, $height, function ($draw) {
-                        $draw->color(array(255, 255, 255, 0.45)); 
+            // Linhas Diagonais Inversas ( / )
+            for ($i = 0; $i < $width + $height; $i += $spacing) {
+                for ($thickness = -3; $thickness <= 3; $thickness++) { // Linha de 7px de espessura
+                    $image->line($i + $thickness, 0, $i - $height + $thickness, $height, function ($draw) use ($lineColor) {
+                        $draw->color($lineColor);
                     });
                 }
             }
-            
-            // Marca d'água principal MASSIVA
+
+            // ─── 2.2 REPETIR LOGO E MENSAGEM EM GRADE ALTERNADA ──────────────────
+            $rows = 8;
+            $cols = 6;
+            $cellWidth = $width / $cols;
+            $cellHeight = $height / $rows;
+
+            for ($r = 0; $r < $rows; $r++) {
+                for ($c = 0; $c < $cols; $c++) {
+                    $posX = ($c * $cellWidth) + ($cellWidth / 2);
+                    $posY = ($r * $cellHeight) + ($cellHeight / 2);
+                    
+                    // Alterna entre LOGO e MENSAGEM
+                    if (($r + $c) % 2 === 0) {
+                        $image->text('FOTSPORT', $posX, $posY, function($font) use ($cellWidth) {
+                            $font->size($cellWidth * 0.4);
+                            $font->color([255, 255, 255, 0.4]);
+                            $font->align('center');
+                            $font->valign('center');
+                            $font->angle(25);
+                        });
+                    } else {
+                        $image->text('PROIBIDA A UTILIZAÇÃO', $posX, $posY, function($font) use ($cellWidth) {
+                            $font->size($cellWidth * 0.15); // Texto menor para caber
+                            $font->color([255, 255, 255, 0.5]);
+                            $font->align('center');
+                            $font->valign('center');
+                            $font->angle(-15);
+                        });
+                    }
+                }
+            }
+
+            // ─── 2.3 MARCA CENTRAL MASSIVA E AVISO PRINCIPAL ──────────────────────
             $image->text('FOTSPORT', $width / 2, $height / 2, function($font) use ($width) {
-                $font->size(max($width / 4, 100));
-                $font->color([255, 255, 255, 0.9]);
+                $font->size($width / 5);
+                $font->color([255, 255, 255, 0.7]);
                 $font->align('center');
                 $font->valign('center');
                 $font->angle(25);
             });
 
-            // Texto obrigatório no rodapé
-            $image->text('FOTO NÃO COMERCIALIZADA', $width / 2, ($height / 2) + (max($width / 4, 100) / 1.5), function($font) use ($width) {
-                $font->size(max($width / 15, 30));
-                $font->color([255, 255, 255, 0.9]);
+            $image->text('ARQUIVO PROTEGIDO - USO PROIBIDO', $width / 2, ($height / 2) + ($width / 10), function($font) use ($width) {
+                $font->size($width / 25);
+                $font->color([255, 255, 255, 0.8]);
                 $font->align('center');
                 $font->valign('center');
             });
@@ -113,21 +137,32 @@ class PhotoController extends Controller
             ]);
 
             try {
+                $faceApiUrl = config('services.face_api.url');
                 $indexResponse = Http::timeout(60)
                     ->attach('file', fopen(storage_path('app/public/' . $originalPath), 'r'), $filename)
-                    ->post('http://face-api:8001/index_photo/', [
-                        'photo_id' => $photoModel->id,
-                        'event_id' => $event->id
-                    ]);
+                    ->attach('photo_id', (string) $photoModel->id)
+                    ->attach('event_id', (string) $event->id)
+                    ->post($faceApiUrl . '/index_photo/');
                 
                 if (!$indexResponse->successful()) {
                     \Illuminate\Support\Facades\Log::error('Falha na indexação facial: ' . $indexResponse->status() . ' - ' . $indexResponse->body());
                 } else {
-                    \Illuminate\Support\Facades\Log::info('Foto indexada com sucesso: ' . $photoModel->id);
+                    $resData = $indexResponse->json();
+                    $encodings = $resData['encodings'] ?? [];
+                    
+                    if (!empty($encodings)) {
+                        $photoModel->update([
+                            'face_descriptors' => $encodings,
+                            'face_indexed'     => true
+                        ]);
+                    }
+                    
+                    \Illuminate\Support\Facades\Log::info('Foto indexada com sucesso: ' . $photoModel->id . ' (Faces: ' . count($encodings) . ')');
                 }
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error('Exceção ao indexar face: ' . $e->getMessage());
             }
+
         }
 
         return back()->with('message', 'Fotos otimizadas e enviadas com sucesso!');
@@ -144,12 +179,64 @@ class PhotoController extends Controller
         if ($photo->original_path) {
             Storage::disk('public')->delete(str_replace('storage/', '', $photo->original_path));
         }
-        
         Storage::disk('public')->delete(str_replace('storage/', '', $photo->watermarked_path));
 
-        // Deletar do BD
         $photo->delete();
 
         return back()->with('message', 'Foto excluída permanentemente.');
+    }
+
+    /**
+     * Exclusão em massa de fotos (somente suas próprias, ou superadmin)
+     */
+    public function bulkDestroy(Request $request, Event $event)
+    {
+        $request->validate([
+            'photo_ids'   => 'required|array|min:1|max:200',
+            'photo_ids.*' => 'integer|exists:photos,id',
+        ]);
+
+        $query = Photo::whereIn('id', $request->photo_ids)
+            ->where('event_id', $event->id);
+
+        if (!auth()->user()->is_superadmin) {
+            $query->where('user_id', auth()->id());
+        }
+
+        $photos = $query->get();
+
+        $deleted = 0;
+        foreach ($photos as $photo) {
+            if (!auth()->user()->is_superadmin && $photo->user_id !== auth()->id()) {
+                continue; // pula fotos que não pertencem ao usuário
+            }
+
+            if ($photo->original_path) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $photo->original_path));
+            }
+            Storage::disk('public')->delete(str_replace('storage/', '', $photo->watermarked_path));
+
+            $photo->delete();
+            $deleted++;
+        }
+
+        return back()->with('message', "{$deleted} foto(s) excluída(s).");
+    }
+
+    public function updatePrice(Request $request, Photo $photo)
+    {
+        if (!auth()->user()->is_superadmin && $photo->user_id !== auth()->id()) {
+            abort(403);
+        }
+
+        $request->validate([
+            'price' => 'required|numeric|min:0|max:10000'
+        ]);
+
+        $photo->update([
+            'price' => $request->price
+        ]);
+
+        return back()->with('message', 'Preço atualizado com sucesso!');
     }
 }

@@ -30,11 +30,21 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar arquivos do projeto
+# --- OTIMIZAÇÃO DE CACHE DO COMPOSER ---
+# Copiar apenas os arquivos de dependência primeiro
+COPY composer.json composer.lock ./
+
+# Instalar as dependências sem scripts e sem autoloader final (camada reciclável)
+RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+
+# Agora copiar o código do projeto (isso mudará com frequência)
 COPY . .
 
-# Instalar dependências do Composer
-RUN composer install --no-dev --optimize-autoloader
+# Finalizar o autoloader e rodar scripts necessários do Laravel/Composer
+RUN composer dump-autoload --optimize --no-dev \
+    && composer run-script post-autoload-dump
+
+# --- FIM DA OTIMIZAÇÃO ---
 
 # Configurar permissões e Nginx
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf

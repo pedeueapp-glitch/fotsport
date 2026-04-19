@@ -15,7 +15,15 @@ class Photo extends Model
         'original_path',
         'watermarked_path',
         'price',
+        'face_descriptors',
+        'face_indexed',
     ];
+
+    protected $casts = [
+        'face_descriptors' => 'array',
+        'face_indexed' => 'boolean',
+    ];
+
 
     public function event()
     {

@@ -11,7 +11,14 @@ class EventController extends Controller
 {
     public function index()
     {
-        $events = Event::with('user')->get();
+        // Todos os fotógrafos veem todos os eventos da plataforma
+        $events = Event::with('user')
+            ->withCount('photos')
+            ->with(['photos' => function ($query) {
+                $query->oldest()->limit(1);
+            }])
+            ->latest()
+            ->get();
         return Inertia::render('Events/Index', [
             'events' => $events
         ]);
@@ -27,6 +34,7 @@ class EventController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
+            'category' => 'required|string|max:100',
             'date' => 'required|date',
             'location' => 'nullable|string|max:255'
         ]);

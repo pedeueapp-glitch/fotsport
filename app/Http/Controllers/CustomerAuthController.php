@@ -34,6 +34,10 @@ class CustomerAuthController extends Controller
 
         Auth::guard('customer')->login($customer);
 
+        if (session()->has('pending_checkout_photos')) {
+            return back()->with('trigger_checkout', true);
+        }
+
         return redirect()->intended(route('customer.dashboard'))->with('success', 'Bem-vindo de volta!');
     }
 }

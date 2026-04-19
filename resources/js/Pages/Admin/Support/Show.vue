@@ -1,7 +1,6 @@
-<script setup>
-import { Head, useForm, router } from '@inertiajs/vue3';
-import Navbar from '@/Components/Navbar.vue';
-import Footer from '@/Components/Footer.vue';
+﻿<script setup>
+import { Head, useForm, router, Link } from '@inertiajs/vue3';
+import AdminSidebarLayout from '@/Layouts/AdminSidebarLayout.vue';
 import { ref, onMounted, nextTick } from 'vue';
 
 const props = defineProps({
@@ -41,84 +40,84 @@ const toggleStatus = () => {
 </script>
 
 <template>
-    <Head :title="'Suporte Admn: ' + ticket.subject" />
+    <Head :title="'Suporte ADM: ' + ticket.subject" />
 
-    <div class="min-h-screen bg-white flex flex-col font-sans text-brand-dark">
-        <Navbar />
-
-        <main class="flex-grow max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full flex flex-col lg:flex-row gap-12">
-            <!-- Sidebar Info -->
-            <aside class="lg:w-1/3">
-                <div class="bg-gray-50 p-10 rounded-[3rem] border border-gray-100 sticky top-20">
-                    <header class="mb-10">
-                        <span class="text-[9px] font-black text-brand-orange uppercase tracking-[0.4em] mb-4 block">Informações do Chamado</span>
-                        <h1 class="text-3xl font-black text-brand-dark uppercase tracking-tighter mb-4">{{ ticket.subject }}</h1>
-                    </header>
-
-                    <div class="space-y-8">
-                        <div class="flex items-center gap-4">
-                            <div class="w-12 h-12 bg-white rounded-2xl shadow-xl flex items-center justify-center text-brand-blue font-black">{{ ticket.user.name.charAt(0) }}</div>
+    <AdminSidebarLayout :title="'Chamado: ' + ticket.subject">
+        <div class="flex flex-col lg:flex-row gap-8 min-h-[600px]">
+            <!-- Detalhes do Chamado -->
+            <div class="lg:w-1/3 space-y-4">
+                <div class="bg-gray-50 p-6 rounded-2xl border border-gray-100">
+                    <h3 class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-4">Informações</h3>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-brand-dark rounded-xl flex items-center justify-center text-white font-black text-xs shadow">
+                                {{ ticket.user.name.charAt(0) }}
+                            </div>
                             <div>
-                                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fotógrafo</p>
-                                <p class="font-black text-brand-dark uppercase">{{ ticket.user.name }}</p>
+                                <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Fotógrafo</p>
+                                <p class="text-xs font-black text-brand-dark uppercase truncate max-w-[150px]">{{ ticket.user.name }}</p>
                             </div>
                         </div>
 
                         <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Status</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">Status Atual</p>
                             <button @click="toggleStatus" 
-                                    :class="ticket.status === 'open' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'"
-                                    class="px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 transition-transform active:scale-95">
-                                {{ ticket.status === 'open' ? 'Aberto (Clique p/ Fechar)' : 'Fechado (Clique p/ Abrir)' }}
+                                    :class="ticket.status === 'open' ? 'bg-green-100 text-green-600 border-green-200' : 'bg-red-100 text-red-600 border-red-200'"
+                                    class="w-full px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all active:scale-95 text-center">
+                                {{ ticket.status === 'open' ? 'Aberto (Fechar)' : 'Encerrado (Reabrir)' }}
                             </button>
                         </div>
 
                         <div>
-                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Data de Abertura</p>
-                            <p class="font-bold text-gray-600">{{ new Date(ticket.created_at).toLocaleString('pt-BR') }}</p>
+                            <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Abertura</p>
+                            <p class="text-[10px] font-bold text-brand-dark uppercase">{{ new Date(ticket.created_at).toLocaleString('pt-BR') }}</p>
                         </div>
                     </div>
 
-                    <div class="mt-12 pt-12 border-t border-gray-200">
-                        <Link :href="route('admin.support.index')" class="w-full py-4 bg-white border border-gray-200 text-center block rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all">Voltar para a Lista</Link>
-                    </div>
+                    <Link :href="route('admin.support.index')" class="mt-8 w-full py-3 bg-white border border-gray-200 rounded-xl text-[9px] font-black uppercase tracking-widest text-gray-400 hover:text-brand-dark hover:border-brand-dark transition-all block text-center">
+                        Voltar para Lista
+                    </Link>
                 </div>
-            </aside>
+            </div>
 
-            <!-- Chat Admin -->
-            <div class="lg:w-2/3 flex flex-col">
-                <div ref="chatContainer" class="flex-grow bg-white border border-gray-100 rounded-[3.5rem] p-10 md:p-12 shadow-sm overflow-y-auto max-h-[700px] mb-8 space-y-10 scroll-smooth">
+            <!-- Área de Chat -->
+            <div class="lg:w-2/3 flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                <div ref="chatContainer" class="flex-grow p-6 overflow-y-auto max-h-[500px] space-y-6 bg-gray-50/30">
                     <div v-for="msg in ticket.messages" :key="msg.id" 
-                         :class="!msg.is_admin_reply ? 'justify-start mr-12' : 'justify-end ml-12'" class="flex items-start gap-4">
+                         :class="!msg.is_admin_reply ? 'justify-start' : 'justify-end'" class="flex items-start gap-3">
                         
-                        <div v-if="!msg.is_admin_reply" class="w-10 h-10 rounded-xl bg-gray-100 text-brand-dark flex-shrink-0 flex items-center justify-center font-black text-xs shadow-sm">
+                        <div v-if="!msg.is_admin_reply" class="w-8 h-8 rounded-lg bg-gray-200 text-gray-500 flex-shrink-0 flex items-center justify-center font-black text-[10px]">
                              {{ ticket.user.name.charAt(0) }}
                         </div>
                         
-                        <div :class="!msg.is_admin_reply ? 'bg-gray-100 text-brand-dark rounded-tr-3xl rounded-br-3xl rounded-bl-3xl' : 'bg-brand-orange text-white rounded-tl-3xl rounded-bl-3xl rounded-br-3xl shadow-orange-500/20 shadow-xl'" 
-                             class="p-8">
-                            <p class="text-base font-medium leading-relaxed">{{ msg.message }}</p>
-                            <time class="mt-4 block text-[9px] font-black uppercase tracking-widest opacity-40">{{ new Date(msg.created_at).toLocaleString('pt-BR') }}</time>
+                        <div :class="!msg.is_admin_reply ? 'bg-white border border-gray-100 text-brand-dark rounded-tr-2xl rounded-br-2xl rounded-bl-2xl shadow-sm' : 'bg-brand-orange text-white rounded-tl-2xl rounded-bl-2xl rounded-br-2xl shadow-lg shadow-brand-orange/10'" 
+                             class="px-5 py-4 max-w-[85%]">
+                            <p class="text-xs font-bold leading-relaxed">{{ msg.message }}</p>
+                            <span class="mt-2 block text-[7px] font-black uppercase tracking-widest opacity-40">{{ new Date(msg.created_at).toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'}) }}</span>
                         </div>
 
-                        <div v-if="msg.is_admin_reply" class="w-10 h-10 rounded-xl bg-brand-orange text-white flex-shrink-0 flex items-center justify-center font-black text-xs rotate-6 shadow-lg">?</div>
+                        <div v-if="msg.is_admin_reply" class="w-8 h-8 rounded-lg bg-brand-orange text-white flex-shrink-0 flex items-center justify-center font-black text-[10px] shadow-sm shadow-brand-orange/20">
+                            A
+                        </div>
                     </div>
                 </div>
 
-                <!-- Admin Response Form -->
-                <div class="bg-gray-50 p-6 rounded-[2.5rem] border border-gray-100">
-                    <form @submit.prevent="submit" class="flex gap-4">
-                        <textarea v-model="form.message" 
-                               class="flex-grow bg-white border-0 rounded-2xl px-8 py-5 text-brand-dark font-bold placeholder:italic focus:ring-4 focus:ring-brand-orange/10 resize-none h-20"
-                               placeholder="Digite sua resposta oficial..."></textarea>
-                        <button :disabled="form.processing || !form.message" class="px-10 bg-brand-orange text-white font-black uppercase tracking-[0.2em] text-[10px] rounded-2xl shadow-xl shadow-brand-orange/20 active:scale-95 disabled:opacity-30 transition-all">
-                            Enviar Resposta
+                <!-- Input -->
+                <div class="p-4 bg-white border-t border-gray-100">
+                    <form @submit.prevent="submit" class="flex gap-3">
+                        <input v-model="form.message" 
+                               class="flex-grow bg-gray-50 border-gray-100 rounded-xl px-4 py-3 text-xs font-bold placeholder:text-gray-300 focus:ring-2 focus:ring-brand-orange/10 focus:border-brand-orange transition-all"
+                               placeholder="Digite sua resposta oficial..." />
+                        <button :disabled="form.processing || !form.message" 
+                                class="px-6 bg-brand-orange text-white font-black uppercase tracking-widest text-[9px] rounded-xl shadow-lg shadow-brand-orange/10 active:scale-95 disabled:opacity-30 transition-all shrink-0">
+                            Enviar
                         </button>
                     </form>
                 </div>
             </div>
-        </main>
-
-        <Footer />
-    </div>
+        </div>
+    </AdminSidebarLayout>
 </template>
+
+

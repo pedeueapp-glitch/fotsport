@@ -20,6 +20,19 @@ watch(() => usePage().props.flash?.checkout_data, (newVal) => {
     }
 }, { immediate: true });
 
+// Recupera fotos da sessão após login e dispara checkout
+watch(() => usePage().props.flash?.pending_checkout_photos, (newVal) => {
+    if (newVal && newVal.length > 0) {
+        selectedPhotos.value = [...newVal];
+    }
+}, { immediate: true });
+
+watch(() => usePage().props.flash?.trigger_checkout, (newVal) => {
+    if (newVal) {
+        checkout();
+    }
+}, { immediate: true });
+
 const selectedPhotos = ref([]);
 const lightboxIndex = ref(null);
 

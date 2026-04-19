@@ -92,7 +92,7 @@ onMounted(() => {
                         <div class="w-12 h-12 bg-gray-200 rounded-xl"></div>
                         <div class="w-12 h-12 bg-gray-200 rounded-xl"></div>
                     </div>
-                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest italic">
+                    <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">
                         Obrigado por escolher a Fotsport para registrar seus melhores momentos.
                     </p>
                 </div>

@@ -5,25 +5,73 @@ namespace App\Http\Controllers;
 use App\Models\Event;
 use App\Models\Photo;
 use App\Models\Purchase;
+use App\Models\Brand;
+use App\Models\HeroItem;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Inertia\Inertia;
 
 class StoreController extends Controller
 {
     public function index()
     {
-        $events = Event::with('user')
+        $today = now()->format('Y-m-d');
+
+        $baseQuery = Event::with('user')
             ->withCount('photos')
             ->with(['photos' => function ($query) {
-                $query->oldest()->limit(1);
+                $query->oldest();
+            }]);
+
+        $todayEvents = (clone $baseQuery)
+            ->whereDate('date', '=', $today)
+            ->latest()
+            ->get();
+
+        $pastEvents = (clone $baseQuery)
+            ->whereDate('date', '<', $today)
+            ->latest()
+            ->get();
+
+        $futureEvents = (clone $baseQuery)
+            ->whereDate('date', '>', $today)
+            ->latest()
+            ->get();
+
+        // Agrupamos os futuros no começo dos outros ou em uma aba separada? 
+        // O usuário pediu "hoje" em destaque, e separar por data.
+        // Vou fundir futuros e passados em uma lista única e manter os de hoje separados.
+        $otherEvents = $futureEvents->concat($pastEvents);
+
+        $brands = Brand::where('is_active', true)->get();
+        $heroItems = HeroItem::where('is_active', true)->orderBy('order')->get();
+
+        return Inertia::render('Store/Index', [
+            'todayEvents' => $todayEvents,
+            'otherEvents' => $otherEvents,
+            'brands' => $brands,
+            'heroItems' => $heroItems
+        ]);
+    }
+
+    public function searchEvents(Request $request)
+    {
+        $query = $request->input('q');
+
+        $events = Event::where('name', 'like', "%{$query}%")
+            ->orWhere('location', 'like', "%{$query}%")
+            ->with('user')
+            ->withCount('photos')
+            ->with(['photos' => function ($q) {
+                $q->oldest()->limit(1);
             }])
             ->latest()
             ->get();
 
-        return Inertia::render('Store/Index', [
-            'events' => $events
+        return Inertia::render('Store/EventSearchResults', [
+            'events' => $events,
+            'searchTerm' => $query
         ]);
     }
 
@@ -37,35 +85,61 @@ class StoreController extends Controller
         $file = $request->file('selfie');
 
         try {
-            $postData = [];
-            if ($request->filled('event_id')) {
-                $postData['event_id'] = $request->event_id;
+            $faceApiUrl = config('services.face_api.url');
+            Log::info('Iniciando busca facial otimizada', ['event_id' => $request->event_id]);
+            
+            // 1. Obter a encoding da selfie
+            $selfieResponse = Http::timeout(30)
+                ->attach('file', fopen($file->getRealPath(), 'r'), 'selfie.jpg')
+                ->post($faceApiUrl . '/get_face_encodings/');
+
+            if (!$selfieResponse->successful() || empty($selfieResponse->json()['encodings'])) {
+                return back()->withErrors(['photo' => 'Nenhuma face detectada na selfie enviada.']);
             }
 
-            $response = Http::timeout(60)
-                ->attach('file', fopen($file->getRealPath(), 'r'), 'selfie.jpg')
-                ->post('http://face-api:8001/search_face/', $postData);
+            $selfieEncoding = $selfieResponse->json()['encodings'][0];
 
-            if ($response->successful()) {
-                $matchIds = $response->json()['matches'] ?? [];
+            // 2. Buscar fotos candidatas no banco de dados
+            $query = Photo::where('face_indexed', true);
+            if ($request->filled('event_id')) {
+                $query->where('event_id', $request->event_id);
+            }
+            
+            // Pegamos apenas o necessário para a comparação
+            $candidates = $query->select('id', 'face_descriptors')->get();
+            
+            if ($candidates->isEmpty()) {
+                return redirect()->route('store.index')->with('error', 'Nestas galeria ainda não foram processadas faces para busca.');
+            }
+
+            $candidatesMap = [];
+            foreach ($candidates as $c) {
+                $candidatesMap[$c->id] = $c->face_descriptors;
+            }
+
+            // 3. Enviar para comparação matemática no serviço Python
+            $compareResponse = Http::timeout(60)->asForm()->post($faceApiUrl . '/compare_faces/', [
+                'source_encoding' => json_encode($selfieEncoding),
+                'candidates'      => json_encode($candidatesMap)
+            ]);
+
+            if ($compareResponse->successful()) {
+                $matchIds = $compareResponse->json()['matches'] ?? [];
+                
                 Log::info('Busca facial concluída', [
-                    'matches_count' => count($matchIds),
-                    'matches' => $matchIds
+                    'matches_count' => count($matchIds)
                 ]);
                 
-                // Limit matches to a reasonable amount
                 $matchIds = array_slice($matchIds, 0, 100);
-                
-                // Salva na sessão para persistir no redirecionamento GET
                 session(['last_search_ids' => $matchIds]);
 
                 return redirect()->route('store.search.results');
             } else {
-                Log::error('Falha na resposta da busca facial', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
+                Log::error('Falha na resposta da comparação facial', [
+                    'status' => $compareResponse->status(),
+                    'body' => $compareResponse->body()
                 ]);
-                return back()->withErrors(['photo' => 'O serviço de reconhecimento facial não respondeu corretamente.']);
+                return back()->withErrors(['photo' => 'O serviço de reconhecimento facial falhou na comparação.']);
             }
         } catch (\Exception $e) {
             Log::error('Erro no search_face: ' . $e->getMessage());
@@ -73,6 +147,7 @@ class StoreController extends Controller
 
         return redirect()->route('store.index')->with('error', 'Não foi possível completar a busca.');
     }
+
 
     public function showSearchResults()
     {
@@ -103,6 +178,8 @@ class StoreController extends Controller
     public function checkout(Request $request)
     {
         if (!auth()->guard('customer')->check()) {
+            // Salva as fotos na sessão para não perder a seleção após o login
+            session(['pending_checkout_photos' => $request->input('photo_ids', [])]);
             return back()->with('show_login', true);
         }
 
@@ -112,6 +189,9 @@ class StoreController extends Controller
         ]);
 
         $photoIds = $request->input('photo_ids', []);
+        
+        // Limpa a sessão se o checkout for iniciado com sucesso
+        session()->forget('pending_checkout_photos');
         $photos   = Photo::with(['event', 'user'])->whereIn('id', $photoIds)->get();
 
         if ($photos->isEmpty()) {
@@ -254,6 +334,17 @@ class StoreController extends Controller
         return redirect()->route('customer.dashboard')->with('success', 'Pagamento processado! Suas fotos já estão disponíveis para download.');
     }
 
+    public function photographers()
+    {
+        $photographers = \App\Models\User::where('is_active', true)
+            ->latest()
+            ->get(['id', 'name', 'slug', 'avatar']);
+
+        return Inertia::render('Store/Photographers', [
+            'photographers' => $photographers
+        ]);
+    }
+
     public function photographerPortfolio(string $slug)
     {
         $user = \App\Models\User::where('slug', $slug)->firstOrFail();
@@ -262,7 +353,7 @@ class StoreController extends Controller
         $photos = Photo::where('user_id', $user->id)
             ->with('event')
             ->latest()
-            ->paginate(20);
+            ->paginate(30);
 
         return Inertia::render('Store/Photographer', [
             'photographer' => $user,

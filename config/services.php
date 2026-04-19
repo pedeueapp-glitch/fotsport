@@ -41,4 +41,8 @@ return [
             : env('MERCADOPAGO_PROD_ACCESS_TOKEN'),
     ],
 
+    'face_api' => [
+        'url' => env('FACE_SERVICE_URL', 'http://face-api:8001'),
+    ],
+
 ];

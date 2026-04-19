@@ -1,3 +1,7 @@
+param (
+    [switch]$Critical = $false
+)
+
 # Fazer o script mudar para a pasta onde ele esta localizado
 Set-Location $PSScriptRoot
 
@@ -8,6 +12,9 @@ $VpsPath = "/root/fotsport"
 
 Write-Host "-------------------------------------------" -ForegroundColor Cyan
 Write-Host "   INICIANDO DEPLOY - FOTSPORT" -ForegroundColor Cyan
+if ($Critical) {
+    Write-Host "   [!] MODO CRITICO: LIMPEZA TOTAL ATIVADA" -ForegroundColor Red
+}
 Write-Host "-------------------------------------------" -ForegroundColor Cyan
 
 # 1. Build Local das Assets
@@ -30,12 +37,16 @@ scp deploy.tar.gz "${VpsUser}@${VpsIP}:${VpsPath}/"
 
 # 3. Extrair e Reconstruir na VPS
 Write-Host "[3/4] Reconstruindo containers na VPS..." -ForegroundColor Yellow
+
+# Determinar comando de build (usar cache por padrão, --no-cache se for critico)
+$BuildFlag = if ($Critical) { "--no-cache" } else { "" }
+
 $Cmd1 = "cd " + $VpsPath
 $Cmd2 = "rm -rf app resources routes public/build"
 $Cmd3 = "tar -xzf deploy.tar.gz"
 $Cmd4 = "rm deploy.tar.gz"
 $Cmd5 = "docker compose down"
-$Cmd6 = "docker compose build --no-cache app"
+$Cmd6 = "docker compose build $BuildFlag app"
 $Cmd7 = "docker compose up -d"
 $RemoteRebuild = $Cmd1 + "; " + $Cmd2 + "; " + $Cmd3 + "; " + $Cmd4 + "; " + $Cmd5 + "; " + $Cmd6 + "; " + $Cmd7 + "; sleep 10"
 ssh ${VpsUser}@${VpsIP} "$RemoteRebuild"

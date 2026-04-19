@@ -1,7 +1,6 @@
 <script setup>
 import { Head, useForm } from '@inertiajs/vue3';
-import Navbar from '@/Components/Navbar.vue';
-import Footer from '@/Components/Footer.vue';
+import AdminSidebarLayout from '@/Layouts/AdminSidebarLayout.vue';
 import { alert } from '@/utils/swal';
 
 const props = defineProps({
@@ -10,51 +9,59 @@ const props = defineProps({
 
 const form = useForm({
     name: props.event.name,
+    category: props.event.category || '',
     location: props.event.location,
     date: props.event.date,
 });
 
+const categories = [
+    'Corrida de Rua', 'Treinos', 'Futebol', 'Ciclismo', 'Duathlon / Triathlon', 
+    'Carnaval', 'Show / Festival', 'Acampamentos', 'Beach Tênis', 'Crossfit', 
+    'Arte Marcial', 'Esportes a Motor', 'Turismo', 'Formatura', 'Escolar', 
+    'Evento Social', 'Ensaio', 'Futevôlei', 'Natação', 'Esportes em Geral', 'Igreja'
+];
+
 const submit = () => {
     form.patch(route('admin.events.update', props.event.slug), {
-        onSuccess: () => alert('Sucesso', 'Evento atualizado com sucesso!', 'success')
+        onSuccess: () => alert('Sucesso', 'Evento atualizado.', 'success')
     });
 };
 </script>
 
 <template>
-    <Head :title="`Editar Evento: ${event.name}`" />
+    <Head :title="`Editar: ${event.name}`" />
 
-    <div class="min-h-screen bg-white flex flex-col font-sans text-brand-dark">
-        <Navbar />
-
-        <main class="flex-grow max-w-2xl mx-auto px-4 py-20 w-full">
-            <header class="mb-12">
-                <h1 class="text-3xl font-black text-brand-dark uppercase tracking-tighter">Editar <span class="text-brand-blue">Evento</span></h1>
-                <p class="text-gray-400 font-medium italic">Alteração global de informações do evento.</p>
-            </header>
-
-            <form @submit.prevent="submit" class="space-y-8 bg-gray-50 p-10 rounded-[2.5rem] border border-gray-100 shadow-sm">
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Nome do Evento</label>
-                    <input v-model="form.name" type="text" class="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold shadow-sm focus:ring-2 focus:ring-brand-blue" required />
+    <AdminSidebarLayout title="Editar Evento" :subtitle="'Ajuste global de informações.'">
+        <div class="max-w-xl">
+            <form @submit.prevent="submit" class="space-y-6 bg-gray-50 p-8 rounded-xl border border-gray-100 shadow-sm italic">
+                <div class="space-y-2">
+                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Nome do Evento</label>
+                    <input v-model="form.name" type="text" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" required />
                 </div>
 
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Local</label>
-                    <input v-model="form.location" type="text" class="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold shadow-sm focus:ring-2 focus:ring-brand-blue" required />
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="space-y-2">
+                        <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Categoria</label>
+                        <select v-model="form.category" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" required>
+                            <option value="" disabled>Selecione uma categoria</option>
+                            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                        </select>
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Data do Evento</label>
+                        <input v-model="form.date" type="date" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" required />
+                    </div>
                 </div>
 
-                <div class="space-y-4">
-                    <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Data do Evento</label>
-                    <input v-model="form.date" type="date" class="w-full h-14 bg-white border-none rounded-2xl px-6 font-bold shadow-sm focus:ring-2 focus:ring-brand-blue" required />
+                <div class="pt-4">
+                    <button :disabled="form.processing" class="w-full py-4 bg-brand-blue text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-brand-blue/10 active:scale-95 transition-all">
+                        {{ form.processing ? 'Salvando...' : 'Salvar Alterações' }}
+                    </button>
                 </div>
-
-                <button :disabled="form.processing" class="w-full py-5 bg-brand-blue text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl shadow-brand-blue/20 active:scale-95 transition-all">
-                    Atualizar Evento
-                </button>
             </form>
-        </main>
-
-        <Footer />
-    </div>
+        </div>
+    </AdminSidebarLayout>
 </template>
+
+
