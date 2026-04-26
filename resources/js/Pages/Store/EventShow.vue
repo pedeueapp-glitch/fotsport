@@ -298,44 +298,49 @@ const portfolioUrl = (user) => {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4">
                     <div v-for="(photo, index) in photoList" :key="photo.id" 
-                         class="group bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col">
+                         class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative">
                         
-                        <div class="aspect-square overflow-hidden relative cursor-pointer" @click="openLightbox(index)">
-                            <img :src="'/' + photo.watermarked_path" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
-                            
-                            <div class="absolute inset-0 bg-brand-dark/40 transition-opacity flex items-center justify-center backdrop-blur-sm"
-                                 :class="selectedPhotos.includes(photo.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'">
-                                <div class="w-12 h-12 rounded-xl flex items-center justify-center shadow-2xl transform transition-transform duration-500"
-                                     :class="selectedPhotos.includes(photo.id) ? 'bg-green-500 text-white scale-100' : 'bg-white text-brand-dark scale-50 group-hover:scale-100'">
-                                    <svg v-if="selectedPhotos.includes(photo.id)" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                    <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
-                                </div>
-                            </div>
-
-                            <div v-if="selectedPhotos.includes(photo.id)" class="absolute top-4 right-4">
-                                <span class="bg-green-500 text-white px-3 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-xl">✓</span>
-                            </div>
+                        <!-- Estado: Em Processamento -->
+                        <div v-if="photo.watermarked_path === 'processing.jpg'" 
+                             class="aspect-square bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
+                            <div class="w-8 h-8 border-3 border-brand-orange/20 border-t-brand-orange rounded-full animate-spin mb-3"></div>
+                            <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-tight">Processando...</p>
                         </div>
 
-                        <div class="p-5 flex-grow flex flex-col">
-                            <div class="mb-4">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <div class="h-0.5 w-3 bg-brand-orange rounded-full"></div>
-                                    <span v-if="photo.user" class="text-[8px] font-black text-brand-orange uppercase tracking-widest truncate flex items-center gap-1">
-                                        {{ photo.user.name }}
-                                        <svg v-if="photo.user.is_verified" class="w-2.5 h-2.5 text-blue-500 fill-current" viewBox="0 0 24 24">
-                                            <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
-                                        </svg>
-                                    </span>
+                        <!-- Estado: Foto Pronta -->
+                        <template v-else>
+                            <div class="aspect-square overflow-hidden relative cursor-pointer" @click="openLightbox(index)">
+                                <img :src="'/' + photo.watermarked_path" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+                                
+                                <div class="absolute inset-0 bg-brand-dark/40 transition-opacity flex items-center justify-center backdrop-blur-[2px]"
+                                     :class="selectedPhotos.includes(photo.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-2xl transform transition-transform duration-500"
+                                         :class="selectedPhotos.includes(photo.id) ? 'bg-green-500 text-white scale-100' : 'bg-white text-brand-dark scale-50 group-hover:scale-100'">
+                                        <svg v-if="selectedPhotos.includes(photo.id)" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                                    </div>
                                 </div>
-                                <p class="text-sm font-black text-brand-dark uppercase tracking-tighter truncate">Registro #{{ photo.id }}</p>
-                                <p class="text-lg font-black text-brand-blue mt-1 leading-none">R$ {{ Number(photo.price).toFixed(2) }}</p>
                             </div>
 
-                            <button @click="togglePhoto(photo.id)"
-                                    class="w-full flex items-center justify-center gap-2 px-4 py-3 text-[9px] font-black uppercase tracking-[0.1em] rounded-xl transition-all active:scale-95"
+                            <div class="p-3 flex-grow flex flex-col justify-between">
+                                <div class="mb-2">
+                                    <p class="text-[10px] font-black text-brand-dark uppercase tracking-tighter truncate">#{{ photo.id }}</p>
+                                    <p class="text-xs font-black text-brand-blue mt-0.5">R$ {{ Number(photo.price).toFixed(2) }}</p>
+                                </div>
+
+                                <button @click="togglePhoto(photo.id)"
+                                        class="w-full flex items-center justify-center py-2 text-[8px] font-black uppercase tracking-[0.1em] rounded-lg transition-all active:scale-95"
+                                        :class="selectedPhotos.includes(photo.id) 
+                                            ? 'bg-gray-100 text-gray-400' 
+                                            : 'bg-brand-dark text-white hover:bg-black shadow-lg'">
+                                    {{ selectedPhotos.includes(photo.id) ? 'Remover' : 'Selecionar' }}
+                                </button>
+                            </div>
+                        </template>
+                    </div>
+                </div>le-95"
                                     :class="selectedPhotos.includes(photo.id) 
                                         ? 'bg-gray-100 text-gray-400' 
                                         : 'bg-brand-dark text-white hover:bg-black shadow-lg shadow-brand-dark/10'">
