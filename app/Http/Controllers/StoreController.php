@@ -350,12 +350,16 @@ class StoreController extends Controller
         $efiStatus = $efiService->getPixStatus($txid);
 
         if ($efiStatus === 'CONCLUIDA') {
-            // Atualiza no banco se estiver concluída na Efí
-            Purchase::where('efi_txid', $txid)->update(['status' => 'approved']);
-            
-            // Credita fotógrafo
-            if ($purchase->photo && $purchase->photo->user) {
-                $purchase->photo->user->increment('balance', $purchase->amount);
+            // Busca todas as compras vinculadas a este TXID
+            $purchases = Purchase::where('efi_txid', $txid)->where('status', '!=', 'approved')->get();
+
+            foreach ($purchases as $p) {
+                $p->update(['status' => 'approved']);
+                
+                // Credita o fotógrafo de cada foto individualmente
+                if ($p->photo && $p->photo->user) {
+                    $p->photo->user->increment('balance', $p->amount);
+                }
             }
             
             return response()->json(['status' => 'CONCLUIDA']);

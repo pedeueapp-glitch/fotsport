@@ -111,82 +111,61 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey));
                 </Link>
             </div>
 
-            <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-                <div v-for="(purchase, index) in purchases" :key="purchase.id" class="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col">
+            <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 sm:gap-6">
+                <div v-for="(purchase, index) in purchases" :key="purchase.id" class="group bg-white rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative">
                     <div class="aspect-square overflow-hidden relative cursor-pointer" @click="openLightbox(index)">
                         <img 
                             :src="'/' + purchase.photo.watermarked_path" 
                             class="w-full h-full object-cover group-hover:scale-110 transition duration-700"
                         />
-                        <div class="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-sm">
-                            <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-brand-dark shadow-2xl transform scale-50 group-hover:scale-100 transition-transform duration-500">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div class="absolute inset-0 bg-brand-dark/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                            <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-brand-dark shadow-2xl transform scale-50 group-hover:scale-100 transition-transform duration-500">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                                 </svg>
                             </div>
                         </div>
-                        <div class="absolute top-6 right-6">
-                            <span :class="getStatusClass(purchase.status)" class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl backdrop-blur-md">
+                        <div class="absolute top-3 right-3">
+                            <span :class="getStatusClass(purchase.status)" class="px-2.5 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest shadow-xl backdrop-blur-md">
                                 {{ getStatusLabel(purchase.status) }}
                             </span>
                         </div>
                     </div>
                     
-                    <div class="p-8 flex-grow flex flex-col">
-                        <div class="mb-8">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="h-1 w-4 bg-brand-orange rounded-full"></div>
-                                <span class="text-[10px] font-black text-brand-orange uppercase tracking-widest">{{ purchase.photo.event ? purchase.photo.event.date : 'Registro' }}</span>
-                            </div>
-                            <h3 class="text-xl font-black text-brand-dark uppercase tracking-tighter line-clamp-1">{{ purchase.photo.event ? purchase.photo.event.name : 'Evento' }}</h3>
+                    <div class="p-4 flex-grow flex flex-col justify-between">
+                        <div class="mb-3">
+                            <p class="text-[9px] font-black text-brand-orange uppercase tracking-widest mb-1">{{ purchase.photo.event ? purchase.photo.event.date : 'Registro' }}</p>
+                            <h3 class="text-xs font-black text-brand-dark uppercase tracking-tighter line-clamp-1">{{ purchase.photo.event ? purchase.photo.event.name : 'Evento' }}</h3>
                         </div>
 
-                        <div class="mt-auto">
-                            <div v-if="purchase.status === 'approved'" class="flex items-center gap-4">
+                        <div class="mt-auto space-y-2">
+                            <template v-if="purchase.status === 'approved'">
                                 <a 
                                     :href="route('customer.download', purchase.id)" 
-                                    class="flex-grow flex items-center justify-center gap-3 px-6 py-4 bg-brand-blue text-white text-[11px] font-black uppercase tracking-[.15em] rounded-2xl hover:bg-brand-blue-hover transition-all shadow-xl shadow-brand-blue/10 active:scale-95"
+                                    class="w-full flex items-center justify-center gap-2 py-2.5 bg-brand-blue text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-brand-blue-hover transition-all shadow-lg shadow-brand-blue/10 active:scale-95"
                                 >
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                     </svg>
                                     Download HD
                                 </a>
-                            </div>
-                            <div v-else-if="purchase.status === 'pending'" class="flex flex-col gap-3">
-                                <div class="p-4 bg-yellow-50 rounded-2xl border border-yellow-100 mb-2">
-                                    <p class="text-[10px] text-yellow-700 font-black uppercase tracking-widest text-center leading-relaxed">
-                                        Aguardando aprovação do pagamento
-                                    </p>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <button 
-                                        @click="repayPurchase(purchase.id)"
-                                        :disabled="repayForm.processing"
-                                        class="flex-grow flex items-center justify-center gap-2 px-6 py-4 bg-brand-orange text-white text-[11px] font-black uppercase tracking-[.15em] rounded-2xl hover:bg-brand-orange-hover transition-all shadow-xl shadow-brand-orange/10 active:scale-95 disabled:opacity-50"
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                        </svg>
-                                        Pagar Agora
-                                    </button>
-                                    <button 
-                                        @click="cancelPurchase(purchase.id)"
-                                        :disabled="cancelForm.processing"
-                                        class="p-4 text-red-500 hover:bg-red-50 rounded-2xl border-2 border-red-50 transition-all disabled:opacity-50"
-                                        title="Desistir da foto"
-                                    >
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div v-else class="p-4 bg-red-50 rounded-2xl border border-red-100">
-                                <p class="text-[10px] text-red-700 font-black uppercase tracking-widest text-center leading-relaxed">
-                                    Pagamento não aprovado
-                                </p>
-                            </div>
+                            </template>
+                            <template v-else-if="purchase.status === 'pending'">
+                                <button 
+                                    @click="repayPurchase(purchase.id)"
+                                    :disabled="repayForm.processing"
+                                    class="w-full flex items-center justify-center gap-2 py-2.5 bg-brand-orange text-white text-[9px] font-black uppercase tracking-widest rounded-xl hover:bg-brand-orange-hover transition-all shadow-lg shadow-brand-orange/10 active:scale-95"
+                                >
+                                    Pagar Agora
+                                </button>
+                                <button 
+                                    @click="cancelPurchase(purchase.id)"
+                                    :disabled="cancelForm.processing"
+                                    class="w-full py-2 text-red-500 hover:bg-red-50 text-[9px] font-black uppercase tracking-widest rounded-xl transition-all"
+                                >
+                                    Desistir
+                                </button>
+                            </template>
                         </div>
                     </div>
                 </div>

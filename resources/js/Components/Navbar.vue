@@ -128,25 +128,8 @@ const toggleMobileMenu = () => {
 
                     <div class="h-4 w-px bg-gray-200"></div>
 
-                    <!-- FOTÓGRAFO OU ADMIN LOGADO -->
-                    <template v-if="$page.props.auth.user">
-                        <Link v-if="$page.props.auth.user.is_superadmin"
-                              :href="route('admin.photographers.index')" 
-                              class="bg-brand-dark text-white px-5 py-2.5 rounded-xl font-black text-[9px] transition-all uppercase tracking-widest hover:bg-brand-blue shadow-lg shadow-brand-dark/10 active:scale-95">
-                            Administração
-                        </Link>
-                        <Link v-else
-                              :href="route('dashboard')" 
-                              class="bg-brand-dark text-white px-5 py-2.5 rounded-xl font-black text-[9px] transition-all uppercase tracking-widest hover:bg-brand-blue shadow-lg shadow-brand-dark/10 active:scale-95">
-                            Meu Painel
-                        </Link>
-
-                        <Link :href="route('logout')" method="post" as="button" class="text-gray-400 hover:text-red-500 transition-colors p-1">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        </Link>
-                    </template>
-                    <!-- CLIENTE LOGADO (CPF) OU VISITANTE -->
-                    <template v-else>
+                    <!-- BOTÃO MINHAS FOTOS (SEMPRE VISÍVEL) -->
+                    <div class="flex items-center gap-6">
                         <Link v-if="$page.props.auth.customer" :href="route('customer.dashboard')" 
                               class="text-brand-blue font-black text-[10px] uppercase tracking-[0.2em] hover:text-brand-dark transition-colors">
                             Minhas Fotos
@@ -156,16 +139,40 @@ const toggleMobileMenu = () => {
                             Minhas Fotos
                         </button>
 
-                        <button @click="showPhotographerModal = true; isLoginMode = true;" 
-                              class="bg-brand-blue hover:bg-brand-dark text-white px-6 py-2.5 rounded-xl font-black text-[9px] transition-all uppercase tracking-[0.2em] shadow-lg shadow-brand-blue/10 active:scale-95">
-                            Área do Fotógrafo
-                        </button>
+                        <div class="h-4 w-px bg-gray-200"></div>
 
+                        <!-- FOTÓGRAFO OU ADMIN LOGADO -->
+                        <template v-if="$page.props.auth.user">
+                            <Link v-if="$page.props.auth.user.is_superadmin"
+                                  :href="route('admin.photographers.index')" 
+                                  class="bg-brand-dark text-white px-5 py-2.5 rounded-xl font-black text-[9px] transition-all uppercase tracking-widest hover:bg-brand-blue shadow-lg shadow-brand-dark/10 active:scale-95">
+                                Administração
+                            </Link>
+                            <Link v-else
+                                  :href="route('dashboard')" 
+                                  class="bg-brand-dark text-white px-5 py-2.5 rounded-xl font-black text-[9px] transition-all uppercase tracking-widest hover:bg-brand-blue shadow-lg shadow-brand-dark/10 active:scale-95">
+                                Meu Painel
+                            </Link>
+
+                            <Link :href="route('logout')" method="post" as="button" class="text-gray-400 hover:text-red-500 transition-colors p-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                            </Link>
+                        </template>
+
+                        <!-- VISITANTE (ÁREA DO FOTÓGRAFO) -->
+                        <template v-else>
+                            <button @click="showPhotographerModal = true; isLoginMode = true;" 
+                                  class="bg-brand-blue hover:bg-brand-dark text-white px-6 py-2.5 rounded-xl font-black text-[9px] transition-all uppercase tracking-[0.2em] shadow-lg shadow-brand-blue/10 active:scale-95">
+                                Área do Fotógrafo
+                            </button>
+                        </template>
+
+                        <!-- LOGOUT CLIENTE (SE LOGADO POR CPF) -->
                         <Link v-if="$page.props.auth.customer" :href="route('store.customer.logout')" method="post" as="button"
-                              class="text-gray-400 hover:text-red-500 transition-colors p-1">
+                              class="text-gray-400 hover:text-red-500 transition-colors p-1" title="Sair do CPF">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         </Link>
-                    </template>
+                    </div>
                 </div>
 
                 <!-- Mobile Menu Button -->
