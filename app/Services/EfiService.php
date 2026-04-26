@@ -198,6 +198,8 @@ class EfiService
             Log::error('Erro crítico no Payout Pix (PUT): ' . $e->getMessage());
             return null;
         }
+    }
+
     public function getPayoutStatus($idEnvio)
     {
         try {
