@@ -129,9 +129,11 @@ class EfiService
             ];
 
             $body = [
-                'valor' => number_format($amount, 2, '.', ''),
-                'chave' => $pixKey
+                'valor' => (string) number_format($amount, 2, '.', ''),
+                'chave' => (string) $pixKey
             ];
+
+            Log::info('Tentando enviar Pix Efí', ['params' => $params, 'body' => $body]);
 
             // Na Efí, transferências Pix imediatas usam pixSend
             $response = $this->efi->pixSend($params, $body);
