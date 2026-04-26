@@ -38,11 +38,13 @@ class FinancialController extends Controller
     {
         $request->validate([
             'pix_key' => 'required|string|max:255',
-            'document' => ['required', 'string', 'max:20', 'regex:/^\d{3}\.\d{3}\.\d{3}\-\d{2}$|^\d{11}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$|^\d{14}$/'], // Valid CPF or CNPJ format
+            'pix_key_type' => 'required|string|in:cpf,email,phone,evp',
+            'document' => ['required', 'string', 'max:20', 'regex:/^\d{3}\.\d{3}\.\d{3}\-\d{2}$|^\d{11}$|^\d{2}\.\d{3}\.\d{3}\/\d{4}\-\d{2}$|^\d{14}$/'],
         ]);
 
         $user = auth()->user();
         $user->pix_key = strip_tags($request->pix_key);
+        $user->pix_key_type = $request->pix_key_type;
         $user->document = preg_replace('/[^0-9]/', '', $request->document);
         $user->save();
 
@@ -52,7 +54,7 @@ class FinancialController extends Controller
     public function withdraw(Request $request)
     {
         $request->validate([
-            'amount' => 'required|numeric|min:5|max:1000000'
+            'amount' => 'required|numeric|min:0.01|max:1000000'
         ]);
 
         $user = auth()->user();
@@ -62,8 +64,8 @@ class FinancialController extends Controller
             return back()->withErrors(['amount' => 'Saldo insuficiente']);
         }
 
-        if (!$user->pix_key || !$user->document) {
-            return back()->withErrors(['pix_key' => 'Você precisa configurar a sua chave PIX antes de sacar.']);
+        if (!$user->pix_key || !$user->pix_key_type) {
+            return back()->withErrors(['pix_key' => 'Você precisa configurar a sua chave PIX e o tipo antes de sacar.']);
         }
 
         // Deduct balance from photographer
@@ -81,6 +83,8 @@ class FinancialController extends Controller
             'request_amount' => $amount,
             'fee_amount' => $fee,
             'net_amount' => $net,
+            'pix_key' => $user->pix_key,
+            'pix_key_type' => $user->pix_key_type,
             'status' => 'pending'
         ]);
 

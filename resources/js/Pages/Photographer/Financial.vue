@@ -25,6 +25,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend,
 const props = defineProps({
     balance: Number,
     pix_key: String,
+    pix_key_type: String,
     document: String,
     withdrawals: Array,
     sales: {
@@ -36,6 +37,7 @@ const props = defineProps({
 
 const pixForm = useForm({
     pix_key: props.pix_key || '',
+    pix_key_type: props.pix_key_type || 'cpf',
     document: props.document || ''
 });
 
@@ -163,14 +165,14 @@ const totalSalesVolume = computed(() => {
                         </div>
                         
                         <div class="max-w-md bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-xl">
-                            <h4 class="font-black text-[9px] uppercase tracking-widest text-white/50 mb-4">Solicitar Saque (Mínimo R$ 5,00)</h4>
+                            <h4 class="font-black text-[9px] uppercase tracking-widest text-white/50 mb-4">Solicitar Saque</h4>
                             <form @submit.prevent="requestWithdraw" class="flex items-center gap-3">
                                 <div class="relative flex-grow">
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-orange font-black">R$</span>
                                     <input
                                         type="number"
                                         step="0.01"
-                                        min="5"
+                                        min="0.01"
                                         v-model="withdrawForm.amount"
                                         class="w-full pl-10 pr-4 py-3 bg-white text-brand-dark font-black text-lg rounded-lg border-0 focus:ring-4 focus:ring-brand-blue/30 transition-all"
                                         placeholder="0,00"
@@ -201,6 +203,20 @@ const totalSalesVolume = computed(() => {
                                     placeholder="Chave PIX"
                                     required
                                 />
+                            </div>
+
+                            <div>
+                                <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Tipo de Chave</label>
+                                <select
+                                    v-model="pixForm.pix_key_type"
+                                    class="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-xs font-bold focus:border-brand-blue focus:ring-4 focus:ring-brand-blue/10 transition-all"
+                                    required
+                                >
+                                    <option value="cpf">CPF</option>
+                                    <option value="email">E-mail</option>
+                                    <option value="phone">Celular (com DDD)</option>
+                                    <option value="evp">Chave Aleatória (EVP)</option>
+                                </select>
                             </div>
 
                             <div>

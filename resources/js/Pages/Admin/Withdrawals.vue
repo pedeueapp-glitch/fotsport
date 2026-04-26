@@ -52,8 +52,12 @@ const authorizePayment = async (id) => {
                             </td>
                             <td class="px-6 py-4">
                                 <div class="inline-flex flex-col">
-                                    <span class="text-[10px] font-black text-brand-blue uppercase">{{ withdrawal.user.pix_key }}</span>
-                                    <span class="text-[8px] text-gray-300 uppercase tracking-tighter">{{ withdrawal.user.document }}</span>
+                                    <span class="text-[10px] font-black text-brand-blue uppercase">{{ withdrawal.pix_key || withdrawal.user.pix_key }}</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-[8px] bg-gray-200 px-1.5 py-0.5 rounded text-gray-500 font-black uppercase">{{ withdrawal.pix_key_type || withdrawal.user.pix_key_type }}</span>
+                                        <span class="text-[8px] text-gray-300 uppercase tracking-tighter">{{ withdrawal.user.document }}</span>
+                                    </div>
+                                    <span v-if="withdrawal.efi_payout_id" class="text-[7px] text-green-400 font-mono mt-1">E2E ID: {{ withdrawal.efi_payout_id }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-[10px] text-gray-400 tracking-tighter">R$ {{ Number(withdrawal.request_amount).toFixed(2) }}</td>

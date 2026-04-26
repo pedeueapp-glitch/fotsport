@@ -14,7 +14,10 @@ class Withdrawal extends Model
         'request_amount',
         'fee_amount',
         'net_amount',
+        'pix_key',
+        'pix_key_type',
         'status',
+        'efi_payout_id',
         'mp_transfer_id',
     ];
 

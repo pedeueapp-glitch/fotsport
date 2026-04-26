@@ -33,33 +33,29 @@ class WithdrawalController extends Controller
             return back()->withErrors(['message' => 'Este saque já foi processado anteriormente.']);
         }
 
-        $token = env('MERCADOPAGO_ACCESS_TOKEN', 'TEST-YOUR-EXPERT-TOKEN');
-        
         try {
-            // Requisição Oficial de Transferência MP
-            // Simulamos o sucesso a prova de falhas para o ambiente local/sandbox caso
-            // as restrições da conta proibirem 'transfers' no scope oauth
-            $requestToMp = Http::withToken($token)
-                ->withHeaders([
-                    'X-Idempotency-Key' => (string) $withdrawal->id
-                ])
-                ->post('https://api.mercadopago.com/v1/transfers', [
-                    "amount" => $withdrawal->net_amount,
-                    "currency_id" => "BRL",
-                    "receiver_email" => $withdrawal->user->pix_key 
-                ]);
-
-            // Fake ID para garantir que funciona no demo
-            $mp_transfer_id = 'mp_sim_' . uniqid();
+            $efiService = new \App\Services\EfiService();
             
-            $withdrawal->status = 'approved';
-            $withdrawal->mp_transfer_id = $mp_transfer_id;
-            $withdrawal->save();
+            // Realiza a transferência Pix real via Efí
+            $pixResponse = $efiService->sendPix(
+                $withdrawal->net_amount,
+                $withdrawal->pix_key ?? $withdrawal->user->pix_key,
+                $withdrawal->pix_key_type ?? $withdrawal->user->pix_key_type,
+                "Saque Fotsport #{$withdrawal->id}"
+            );
 
-            return back()->with('success', 'Transferência PIX enviada e aprovada com sucesso para o fotógrafo!');
+            if ($pixResponse && isset($pixResponse['endToEndId'])) {
+                $withdrawal->status = 'approved';
+                $withdrawal->efi_payout_id = $pixResponse['endToEndId'];
+                $withdrawal->save();
+
+                return back()->with('success', 'Transferência PIX enviada e aprovada com sucesso via Efí Pay!');
+            } else {
+                return back()->withErrors(['message' => 'A Efí recusou a transferência ou saldo insuficiente.']);
+            }
 
         } catch (\Exception $e) {
-            return back()->withErrors(['message' => 'Erro crítico ao conectar no MP: ' . $e->getMessage()]);
+            return back()->withErrors(['message' => 'Erro crítico ao conectar na Efí: ' . $e->getMessage()]);
         }
     }
 }

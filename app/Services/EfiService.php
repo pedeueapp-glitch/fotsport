@@ -120,4 +120,22 @@ class EfiService
             return null;
         }
     }
+
+    public function sendPix($amount, $pixKey, $pixKeyType, $description = 'Saque Fotsport')
+    {
+        try {
+            $body = [
+                'valor' => number_format($amount, 2, '.', ''),
+                'chave' => $pixKey,
+                'mensagem' => $description
+            ];
+
+            // Na Efí, transferências Pix imediatas usam pixSend
+            $response = $this->efi->pixSend([], $body);
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Erro ao enviar Pix (Efi): ' . $e->getMessage());
+            return null;
+        }
+    }
 }
