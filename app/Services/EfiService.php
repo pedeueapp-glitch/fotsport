@@ -128,14 +128,15 @@ class EfiService
                 'idEnvio' => (string) $idEnvio
             ];
 
+            // Criando o corpo EXATAMENTE como a API exige, sem campos extras
             $body = [
-                'valor' => (string) number_format($amount, 2, '.', ''),
-                'chave' => (string) $pixKey
+                'valor' => number_format($amount, 2, '.', ''),
+                'chave' => $pixKey
             ];
 
-            Log::info('Tentando enviar Pix Efí', ['params' => $params, 'body' => $body]);
+            Log::info('Enviando Pix Efí (Chamada Direta)', ['idEnvio' => $idEnvio, 'body' => $body]);
 
-            // Na Efí, transferências Pix imediatas usam pixSend
+            // Usando o método custom da Efí para ter controle total do JSON
             $response = $this->efi->pixSend($params, $body);
             return $response;
         } catch (\Exception $e) {
