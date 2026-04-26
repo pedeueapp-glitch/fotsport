@@ -94,11 +94,10 @@ const portfolioUrl = (user) => {
         <CheckoutModal
             v-if="checkoutData"
             :show="showCheckoutModal"
-            :preference-id="checkoutData.preferenceId"
-            :public-key="checkoutData.publicKey"
+            :pix-qrcode="checkoutData.pix_qrcode"
+            :pix-copy-paste="checkoutData.pix_copy_paste"
             :total="checkoutData.total"
             :items-count="checkoutData.itemsCount"
-            :init-point="checkoutData.initPoint"
             @close="() => { showCheckoutModal = false; checkoutData = null; }"
         />
 
