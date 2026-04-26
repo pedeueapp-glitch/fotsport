@@ -12,6 +12,7 @@ const props = defineProps({
 const payForm = useForm({});
 
 const markAsPaidForm = useForm({});
+const checkForm = useForm({});
 
 const markAsPaid = async (id) => {
     const result = await confirm('Aprovação Manual', 'Deseja marcar este saque como PAGO manualmente? Use apenas se tiver certeza que o dinheiro foi enviado.');
