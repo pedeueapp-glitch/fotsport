@@ -25,147 +25,23 @@ class PhotoController extends Controller
 
         foreach ($request->file('photos') as $file) {
             $filename = Str::uuid() . '.jpg';
-
-            // --- 1. PROCESSAR E SALVAR ORIGINAL OTIMIZADA ---
-            $optimizedOriginal = Image::make($file);
             
-            $optimizedOriginal->resize(2500, 2500, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
+            // Salva temporariamente para o Job processar
+            $tempPath = $file->storeAs('photos/temp', $filename);
 
-            $originalDir = 'photos/original';
-            Storage::disk('public')->makeDirectory($originalDir);
-            $originalPath = $originalDir . '/' . $filename;
-            
-            Storage::disk('public')->put($originalPath, (string) $optimizedOriginal->encode('jpg', 82));
-
-            // --- 2. CRIAR VERSÃO COM MARCA D'ÁGUA (Low Res) ---
-            $image = Image::make($file);
-            
-            $image->resize(1200, 1200, function ($constraint) {
-                $constraint->aspectRatio();
-                $constraint->upsize();
-            });
-            
-            $width = $image->width();
-            $height = $image->height();
-            
-            // ─── 2.1 DESENHAR LINHAS EM "X" GROSSAS ──────────────────────────────
-            $lineColor = [255, 255, 255, 0.35];
-            $spacing = $width / 6; // Espaçamento entre as linhas
-            
-            // Linhas Diagonais ( \ )
-            for ($i = -$height; $i < $width; $i += $spacing) {
-                for ($thickness = -3; $thickness <= 3; $thickness++) { // Linha de 7px de espessura
-                    $image->line($i + $thickness, 0, $i + $height + $thickness, $height, function ($draw) use ($lineColor) {
-                        $draw->color($lineColor);
-                    });
-                }
-            }
-
-            // Linhas Diagonais Inversas ( / )
-            for ($i = 0; $i < $width + $height; $i += $spacing) {
-                for ($thickness = -3; $thickness <= 3; $thickness++) { // Linha de 7px de espessura
-                    $image->line($i + $thickness, 0, $i - $height + $thickness, $height, function ($draw) use ($lineColor) {
-                        $draw->color($lineColor);
-                    });
-                }
-            }
-
-            // ─── 2.2 REPETIR LOGO E MENSAGEM EM GRADE ALTERNADA ──────────────────
-            $rows = 8;
-            $cols = 6;
-            $cellWidth = $width / $cols;
-            $cellHeight = $height / $rows;
-
-            for ($r = 0; $r < $rows; $r++) {
-                for ($c = 0; $c < $cols; $c++) {
-                    $posX = ($c * $cellWidth) + ($cellWidth / 2);
-                    $posY = ($r * $cellHeight) + ($cellHeight / 2);
-                    
-                    // Alterna entre LOGO e MENSAGEM
-                    if (($r + $c) % 2 === 0) {
-                        $image->text('FOTSPORT', $posX, $posY, function($font) use ($cellWidth) {
-                            $font->size($cellWidth * 0.4);
-                            $font->color([255, 255, 255, 0.4]);
-                            $font->align('center');
-                            $font->valign('center');
-                            $font->angle(25);
-                        });
-                    } else {
-                        $image->text('PROIBIDA A UTILIZAÇÃO', $posX, $posY, function($font) use ($cellWidth) {
-                            $font->size($cellWidth * 0.15); // Texto menor para caber
-                            $font->color([255, 255, 255, 0.5]);
-                            $font->align('center');
-                            $font->valign('center');
-                            $font->angle(-15);
-                        });
-                    }
-                }
-            }
-
-            // ─── 2.3 MARCA CENTRAL MASSIVA E AVISO PRINCIPAL ──────────────────────
-            $image->text('FOTSPORT', $width / 2, $height / 2, function($font) use ($width) {
-                $font->size($width / 5);
-                $font->color([255, 255, 255, 0.7]);
-                $font->align('center');
-                $font->valign('center');
-                $font->angle(25);
-            });
-
-            $image->text('ARQUIVO PROTEGIDO - USO PROIBIDO', $width / 2, ($height / 2) + ($width / 10), function($font) use ($width) {
-                $font->size($width / 25);
-                $font->color([255, 255, 255, 0.8]);
-                $font->align('center');
-                $font->valign('center');
-            });
-
-            $watermarkDir = 'photos/watermarked';
-            Storage::disk('public')->makeDirectory($watermarkDir);
-            $watermarkPath = $watermarkDir . '/' . $filename;
-            
-            // SALVA A IMAGEM COM MARCA D'ÁGUA
-            Storage::disk('public')->put($watermarkPath, (string) $image->encode('jpg', 60));
-
-            // Salva no Banco de Dados
+            // Cria o registro inicial no banco
             $photoModel = $event->photos()->create([
                 'user_id'          => auth()->id(),
-                'original_path'    => 'storage/' . $originalPath,
-                'watermarked_path' => 'storage/' . $watermarkPath,
+                'original_path'    => null,
+                'watermarked_path' => 'processing.jpg', // Placeholder
                 'price'            => $request->input('price', 5.00),
             ]);
 
-            try {
-                $faceApiUrl = config('services.face_api.url');
-                $indexResponse = Http::timeout(60)
-                    ->attach('file', fopen(storage_path('app/public/' . $originalPath), 'r'), $filename)
-                    ->attach('photo_id', (string) $photoModel->id)
-                    ->attach('event_id', (string) $event->id)
-                    ->post($faceApiUrl . '/index_photo/');
-                
-                if (!$indexResponse->successful()) {
-                    \Illuminate\Support\Facades\Log::error('Falha na indexação facial: ' . $indexResponse->status() . ' - ' . $indexResponse->body());
-                } else {
-                    $resData = $indexResponse->json();
-                    $encodings = $resData['encodings'] ?? [];
-                    
-                    if (!empty($encodings)) {
-                        $photoModel->update([
-                            'face_descriptors' => $encodings,
-                            'face_indexed'     => true
-                        ]);
-                    }
-                    
-                    \Illuminate\Support\Facades\Log::info('Foto indexada com sucesso: ' . $photoModel->id . ' (Faces: ' . count($encodings) . ')');
-                }
-            } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Exceção ao indexar face: ' . $e->getMessage());
-            }
-
+            // Dispara o Job para processar em segundo plano
+            \App\Jobs\ProcessPhoto::dispatch($photoModel, $tempPath, $filename);
         }
 
-        return back()->with('message', 'Fotos otimizadas e enviadas com sucesso!');
+        return back()->with('message', 'As fotos foram enviadas e estão sendo processadas. Elas aparecerão na galeria em instantes.');
     }
 
     public function destroy(Event $event, Photo $photo)
