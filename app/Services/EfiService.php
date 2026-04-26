@@ -141,9 +141,18 @@ class EfiService
 
             Log::info('Tentando Payout Pix via HTTP Direto', ['idEnvio' => $idEnvio, 'body' => $body]);
 
-            // Obter Token de Acesso manualmente para garantir pureza
-            $auth = base64_encode(config('services.efi.client_id') . ':' . config('services.efi.client_secret'));
+            // Converter Base64 para arquivo PEM se não existir ou for necessário
+            $certBase64 = env('EFI_CERTIFICATE_BASE64');
             $certPath = storage_path('app/efi_cert.pem');
+            
+            if (!file_exists($certPath)) {
+                file_put_contents($certPath, base64_decode($certBase64));
+            }
+
+            // Obter Token de Acesso manualmente para garantir pureza
+            $clientId = config('services.efi.client_id');
+            $clientSecret = config('services.efi.client_secret');
+            $auth = base64_encode("$clientId:$clientSecret");
             
             $tokenResponse = Http::withHeaders(['Authorization' => "Basic $auth"])
                 ->withOptions(['cert' => $certPath])
