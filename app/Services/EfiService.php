@@ -141,12 +141,20 @@ class EfiService
 
             Log::info('Tentando Payout Pix via HTTP Direto', ['idEnvio' => $idEnvio, 'body' => $body]);
 
-            // Converter Base64 para arquivo PEM se não existir ou for necessário
+            // Converter Base64 para arquivo PEM
             $certBase64 = env('EFI_CERTIFICATE_BASE64');
             $certPath = storage_path('app/efi_cert.pem');
             
-            if (!file_exists($certPath)) {
-                file_put_contents($certPath, base64_decode($certBase64));
+            // Sempre garantir que o certificado esteja atualizado e no formato correto (PEM)
+            $p12Content = base64_decode($certBase64);
+            $certs = [];
+            
+            if (openssl_pkcs12_read($p12Content, $certs, "")) {
+                // É um P12, converte para PEM
+                file_put_contents($certPath, $certs['cert'] . $certs['pkey']);
+            } else {
+                // Se não for P12, assume que já é PEM ou tenta salvar direto
+                file_put_contents($certPath, $p12Content);
             }
 
             // Obter Token de Acesso manualmente para garantir pureza
@@ -154,6 +162,8 @@ class EfiService
             $clientSecret = config('services.efi.client_secret');
             $auth = base64_encode("$clientId:$clientSecret");
             
+            Log::info('Solicitando Token de Acesso Efí...', ['auth' => "Basic " . substr($auth, 0, 10) . "..."]);
+
             $tokenResponse = Http::withHeaders(['Authorization' => "Basic $auth"])
                 ->withOptions(['cert' => $certPath])
                 ->post(config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br/oauth/token' : 'https://api-pix.gerencianet.com.br/oauth/token', [
