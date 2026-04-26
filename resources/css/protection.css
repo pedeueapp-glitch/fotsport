@@ -1,0 +1,42 @@
+/* resources/css/protection.css */
+
+/* Impede seleção de texto e imagens */
+body {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+img {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+    pointer-events: none; /* Impede clique direto na imagem */
+}
+
+/* Proteção contra Impressão */
+@media print {
+    body {
+        display: none !important;
+    }
+}
+
+/* Camada de proteção para containers de imagem */
+.photo-protection-container {
+    position: relative;
+    display: inline-block;
+}
+
+.photo-protection-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 10;
+    background: transparent;
+    cursor: default;
+}
