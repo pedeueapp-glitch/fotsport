@@ -340,14 +340,6 @@ const portfolioUrl = (user) => {
                             </div>
                         </template>
                     </div>
-                </div>le-95"
-                                    :class="selectedPhotos.includes(photo.id) 
-                                        ? 'bg-gray-100 text-gray-400' 
-                                        : 'bg-brand-dark text-white hover:bg-black shadow-lg shadow-brand-dark/10'">
-                                {{ selectedPhotos.includes(photo.id) ? 'Remover' : 'Selecionar' }}
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Paginação Inferior Robusta -->
