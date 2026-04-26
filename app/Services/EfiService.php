@@ -125,7 +125,7 @@ class EfiService
     public function sendPix($amount, $pixKey, $pixKeyType, $idEnvio, $description = 'Saque Fotsport')
     {
         try {
-            // Formatação da chave baseada no tipo
+            // 1. Formatação da chave do favorecido
             $formattedKey = $pixKey;
             if ($pixKeyType === 'phone') {
                 $cleanPhone = preg_replace('/[^0-9]/', '', $pixKey);
@@ -134,55 +134,59 @@ class EfiService
                 $formattedKey = preg_replace('/[^0-9]/', '', $pixKey);
             }
 
+            // 2. Gerar o idEnvio único (UUID sem hifens)
+            $idEnvio = str_replace('-', '', (string) \Illuminate\Support\Str::uuid());
+
+            // 3. Montar o corpo conforme o exemplo
             $body = [
                 'valor' => number_format($amount, 2, '.', ''),
-                'chave' => $formattedKey
+                'pagador' => [
+                    'chave' => env('EFI_PIX_KEY') // Sua chave cadastrada no .env
+                ],
+                'favorecido' => [
+                    'chave' => $formattedKey
+                ]
             ];
 
-            Log::info('Tentando Payout Pix via HTTP Direto', ['idEnvio' => $idEnvio, 'body' => $body]);
-
-            // Converter Base64 para arquivo PEM
             $certBase64 = env('EFI_CERTIFICATE_BASE64');
-            $certPath = storage_path('app/efi_cert.pem');
-            
-            // Sempre garantir que o certificado esteja atualizado e no formato correto (PEM)
-            $p12Content = base64_decode($certBase64);
-            $certs = [];
-            
-            if (openssl_pkcs12_read($p12Content, $certs, "")) {
-                // É um P12, converte para PEM
-                file_put_contents($certPath, $certs['cert'] . $certs['pkey']);
-            } else {
-                // Se não for P12, assume que já é PEM ou tenta salvar direto
-                file_put_contents($certPath, $p12Content);
+            $certPath = storage_path('app/efi_cert.p12'); // Voltamos para p12
+            if (!file_exists($certPath)) {
+                file_put_contents($certPath, base64_decode($certBase64));
             }
 
-            // Obter Token de Acesso manualmente para garantir pureza
-            $clientId = config('services.efi.client_id');
-            $clientSecret = config('services.efi.client_secret');
-            $auth = base64_encode("$clientId:$clientSecret");
-            
-            Log::info('Solicitando Token de Acesso Efí...', ['auth' => "Basic " . substr($auth, 0, 10) . "..."]);
+            Log::info('Efí Payout - Iniciando Transferência', ['idEnvio' => $idEnvio, 'body' => $body]);
 
+            // 4. Obter Token mTLS
+            $auth = base64_encode(config('services.efi.client_id') . ':' . config('services.efi.client_secret'));
+            $tokenUrl = config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br/oauth/token' : 'https://api-pix.gerencianet.com.br/oauth/token';
+            
             $tokenResponse = Http::withHeaders(['Authorization' => "Basic $auth"])
-                ->withOptions(['cert' => $certPath])
-                ->post(config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br/oauth/token' : 'https://api-pix.gerencianet.com.br/oauth/token', [
-                    'grant_type' => 'client_credentials'
-                ]);
+                ->withOptions([
+                    'curl' => [
+                        CURLOPT_SSLCERT => $certPath,
+                        CURLOPT_SSLCERTTYPE => 'P12',
+                        CURLOPT_SSLCERTPASSWD => ''
+                    ]
+                ])->post($tokenUrl, ['grant_type' => 'client_credentials']);
 
             $accessToken = $tokenResponse->json()['access_token'];
 
-            // Chamada Final de Envio
+            // 5. Chamada de Envio via PUT (Endpoint /v2/gn/pix/)
             $baseUrl = config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br' : 'https://api-pix.gerencianet.com.br';
             $response = Http::withToken($accessToken)
-                ->withOptions(['cert' => $certPath])
-                ->post("$baseUrl/v2/pix/envio/$idEnvio", $body);
+                ->withOptions([
+                    'curl' => [
+                        CURLOPT_SSLCERT => $certPath,
+                        CURLOPT_SSLCERTTYPE => 'P12',
+                        CURLOPT_SSLCERTPASSWD => ''
+                    ]
+                ])->put("$baseUrl/v2/gn/pix/$idEnvio", $body);
 
-            Log::info('Resposta Efí Payout', ['status' => $response->status(), 'data' => $response->json()]);
+            Log::info('Efí Payout - Resposta', ['status' => $response->status(), 'data' => $response->json()]);
 
             return $response->json();
         } catch (\Exception $e) {
-            Log::error('Erro crítico no Payout Pix (HTTP): ' . $e->getMessage());
+            Log::error('Erro crítico no Payout Pix (PUT): ' . $e->getMessage());
             return null;
         }
     }
