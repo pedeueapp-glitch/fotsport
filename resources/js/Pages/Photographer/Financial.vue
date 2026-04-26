@@ -297,10 +297,10 @@ const totalSalesVolume = computed(() => {
                                     <span class="px-3 py-1.5 inline-flex text-[8px] font-black uppercase tracking-widest rounded-md"
                                         :class="{
                                             'bg-yellow-100 text-yellow-700': withdrawal.status === 'pending',
-                                            'bg-green-100 text-green-700': withdrawal.status === 'approved',
+                                            'bg-green-100 text-green-700': withdrawal.status === 'approved' || withdrawal.status === 'paid',
                                             'bg-red-100 text-red-700': withdrawal.status === 'rejected',
                                         }">
-                                        {{ withdrawal.status === 'pending' ? 'Pendente' : (withdrawal.status === 'approved' ? '✓ Pago' : '✖ Recusado') }}
+                                        {{ withdrawal.status === 'pending' ? 'Pendente' : ( (withdrawal.status === 'approved' || withdrawal.status === 'paid') ? '✓ Pago' : '✖ Recusado') }}
                                     </span>
                                 </td>
                             </tr>
