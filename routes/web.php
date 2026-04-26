@@ -20,6 +20,7 @@ Route::post('/search', [\App\Http\Controllers\StoreController::class, 'search'])
 Route::get('/search-results', [\App\Http\Controllers\StoreController::class, 'showSearchResults'])->name('store.search.results');
 Route::get('/checkout', fn() => redirect()->route('store.index'));
 Route::post('/checkout', [\App\Http\Controllers\StoreController::class, 'checkout'])->name('store.checkout');
+Route::post('/checkout/check-status', [\App\Http\Controllers\StoreController::class, 'checkPaymentStatus'])->name('store.checkout.check');
 Route::get('/success', [\App\Http\Controllers\StoreController::class, 'success'])->name('store.success');
 Route::get('/fotografos', [\App\Http\Controllers\StoreController::class, 'photographers'])->name('store.photographers');
 Route::get('/fotografo/{slug}', [\App\Http\Controllers\StoreController::class, 'photographerPortfolio'])->name('store.photographer');

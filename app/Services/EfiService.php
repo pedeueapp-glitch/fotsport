@@ -84,8 +84,33 @@ class EfiService
             }
 
             return null;
+    public function getPixStatus($txid)
+    {
+        try {
+            $params = [
+                'txid' => $txid
+            ];
+            $response = $this->efi->pixDetailCharge($params);
+            return $response['status'] ?? 'pending';
         } catch (\Exception $e) {
-            Log::error('Erro Efi Pay: ' . $e->getMessage());
+            Log::error('Erro ao consultar status Pix: ' . $e->getMessage());
+            return 'error';
+        }
+    }
+
+    public function registerWebhook($pixKey, $url)
+    {
+        try {
+            $params = [
+                'chave' => $pixKey
+            ];
+            $body = [
+                'webhookUrl' => $url
+            ];
+            $response = $this->efi->pixConfigWebhook($params, $body);
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Erro ao registrar Webhook Efí: ' . $e->getMessage());
             return null;
         }
     }

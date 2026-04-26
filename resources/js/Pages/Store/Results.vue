@@ -96,6 +96,7 @@ const portfolioUrl = (user) => {
             :show="showCheckoutModal"
             :pix-qrcode="checkoutData.pix_qrcode"
             :pix-copy-paste="checkoutData.pix_copy_paste"
+            :txid="checkoutData.txid"
             :total="checkoutData.total"
             :items-count="checkoutData.itemsCount"
             @close="() => { showCheckoutModal = false; checkoutData = null; }"

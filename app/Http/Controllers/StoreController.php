@@ -231,6 +231,7 @@ class StoreController extends Controller
             return back()->with('checkout_data', [
                 'pix_qrcode' => $pixData['qrcode'],
                 'pix_copy_paste' => $pixData['copy_paste'],
+                'txid' => $pixData['txid'],
                 'total' => $total,
                 'itemsCount' => count($photoIds),
             ]);
@@ -329,5 +330,35 @@ class StoreController extends Controller
             'photographer' => $user,
             'photos'       => $photos,
         ]);
+    public function checkPaymentStatus(Request $request)
+    {
+        $txid = $request->input('txid');
+        
+        $purchase = Purchase::where('efi_txid', $txid)->first();
+        if (!$purchase) {
+            return response()->json(['status' => 'not_found'], 404);
+        }
+
+        if ($purchase->status === 'approved') {
+            return response()->json(['status' => 'CONCLUIDA']);
+        }
+
+        // Se ainda está pendente no banco, consulta a Efí
+        $efiService = new \App\Services\EfiService();
+        $efiStatus = $efiService->getPixStatus($txid);
+
+        if ($efiStatus === 'CONCLUIDA') {
+            // Atualiza no banco se estiver concluída na Efí
+            Purchase::where('efi_txid', $txid)->update(['status' => 'approved']);
+            
+            // Credita fotógrafo
+            if ($purchase->photo && $purchase->photo->user) {
+                $purchase->photo->user->increment('balance', $purchase->amount);
+            }
+            
+            return response()->json(['status' => 'CONCLUIDA']);
+        }
+
+        return response()->json(['status' => $efiStatus]);
     }
 }
