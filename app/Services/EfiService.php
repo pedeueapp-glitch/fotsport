@@ -130,8 +130,7 @@ class EfiService
 
             $body = [
                 'valor' => number_format($amount, 2, '.', ''),
-                'chave' => $pixKey,
-                'mensagem' => $description
+                'chave' => $pixKey
             ];
 
             // Na Efí, transferências Pix imediatas usam pixSend
