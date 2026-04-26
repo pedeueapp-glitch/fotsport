@@ -201,20 +201,34 @@ class StoreController extends Controller
         // ── Efi Pay Pix (via EfiService) ──
         $efiService = new \App\Services\EfiService();
 
+        // ── Lógica de Desconto Progressivo ──
+        $count = count($photoIds);
+        $discountPercent = 0;
+        
+        if ($count >= 10) {
+            $discountPercent = 0.20; // 20%
+        } elseif ($count >= 5) {
+            $discountPercent = 0.10; // 10%
+        } elseif ($count >= 2) {
+            $discountPercent = 0.05; // 5%
+        }
+
         // Cria registros de compra com status 'pending' e coleta seus IDs
         $purchaseIds = [];
         $total       = 0;
         $customerId = auth()->guard('customer')->id();
 
         foreach ($photos as $photo) {
+            $discountedPrice = $photo->price * (1 - $discountPercent);
+            
             $purchase = Purchase::create([
                 'customer_id' => $customerId,
                 'photo_id' => $photo->id,
                 'status'   => 'pending',
-                'amount'   => $photo->price,
+                'amount'   => $discountedPrice, // Valor real que será creditado ao fotógrafo
             ]);
             $purchaseIds[] = $purchase->id;
-            $total += $photo->price;
+            $total += $discountedPrice;
         }
 
         $customer = auth()->guard('customer')->user();

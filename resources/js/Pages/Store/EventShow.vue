@@ -468,8 +468,21 @@ const portfolioUrl = (user) => {
 
                     <div class="flex items-center gap-10">
                         <div class="text-center md:text-right">
-                            <p class="text-[10px] text-brand-orange uppercase font-black tracking-[.3em]">Total</p>
-                            <p class="text-white font-black text-3xl">R$ {{ photoList.filter(p => selectedPhotos.includes(p.id)).reduce((acc, p) => acc + Number(p.price), 0).toFixed(2) }}</p>
+                            <template v-if="selectedPhotos.length >= 2">
+                                <p class="text-[10px] text-green-400 uppercase font-black tracking-[.3em] mb-1">
+                                    Economia de {{ selectedPhotos.length >= 10 ? '20%' : (selectedPhotos.length >= 5 ? '10%' : '5%') }}
+                                </p>
+                                <div class="flex items-center gap-3 justify-center md:justify-end">
+                                    <span class="text-white/30 line-through text-sm font-bold">R$ {{ photoList.filter(p => selectedPhotos.includes(p.id)).reduce((acc, p) => acc + Number(p.price), 0).toFixed(2) }}</span>
+                                    <p class="text-white font-black text-3xl">
+                                        R$ {{ (photoList.filter(p => selectedPhotos.includes(p.id)).reduce((acc, p) => acc + Number(p.price), 0) * (selectedPhotos.length >= 10 ? 0.8 : (selectedPhotos.length >= 5 ? 0.9 : 0.95))).toFixed(2) }}
+                                    </p>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <p class="text-[10px] text-brand-orange uppercase font-black tracking-[.3em]">Total</p>
+                                <p class="text-white font-black text-3xl">R$ {{ photoList.filter(p => selectedPhotos.includes(p.id)).reduce((acc, p) => acc + Number(p.price), 0).toFixed(2) }}</p>
+                            </template>
                         </div>
                         <button @click="checkout" :disabled="checkoutForm.processing"
                                 class="bg-brand-blue hover:bg-brand-blue-hover text-white px-10 py-5 rounded-3xl font-black text-[11px] uppercase tracking-[.2em] shadow-2xl transition-all active:scale-95 border-none disabled:opacity-50">
