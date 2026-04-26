@@ -171,11 +171,11 @@ const totalSalesVolume = computed(() => {
                                     <span class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-orange font-black">R$</span>
                                     <input
                                         type="number"
-                                        step="0.01"
-                                        min="0.01"
+                                        step="1"
+                                        min="1"
                                         v-model="withdrawForm.amount"
                                         class="w-full pl-10 pr-4 py-3 bg-white text-brand-dark font-black text-lg rounded-lg border-0 focus:ring-4 focus:ring-brand-blue/30 transition-all"
-                                        placeholder="0,00"
+                                        placeholder="Valor inteiro"
                                         required
                                     />
                                 </div>
@@ -183,7 +183,9 @@ const totalSalesVolume = computed(() => {
                                     Sacar
                                 </button>
                             </form>
-                            <p class="text-[8px] text-white/40 mt-3 font-medium uppercase tracking-widest">A plataforma retém {{ withdrawal_fee_percentage }}% de taxa operacional.</p>
+                            <p class="text-[8px] text-white/40 mt-3 font-medium uppercase tracking-widest">
+                                Somente valores inteiros (sem centavos) • Taxa de {{ withdrawal_fee_percentage }}% aplicada.
+                            </p>
                         </div>
                     </div>
                 </div>

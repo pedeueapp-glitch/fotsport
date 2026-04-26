@@ -58,17 +58,17 @@ class FinancialController extends Controller
         ]);
 
         $user = auth()->user();
-        $amount = (float) $request->amount;
+        // Deduct balance from photographer (Usando floor para garantir valores inteiros)
+        $amount = floor((float) $request->amount);
 
         if ($user->balance < $amount) {
-            return back()->withErrors(['amount' => 'Saldo insuficiente']);
+            return back()->withErrors(['amount' => 'Saldo insuficiente para este valor inteiro.']);
         }
 
         if (!$user->pix_key || !$user->pix_key_type) {
             return back()->withErrors(['pix_key' => 'Você precisa configurar a sua chave PIX e o tipo antes de sacar.']);
         }
 
-        // Deduct balance from photographer
         $user->balance -= $amount;
         $user->save();
 
@@ -76,12 +76,12 @@ class FinancialController extends Controller
         $feePercentage = (float) \App\Models\Setting::where('key', 'withdrawal_fee')->value('value') ?: 15.0;
         
         $fee = $amount * ($feePercentage / 100);
-        $net = $amount - $fee;
+        $net = floor($amount - $fee); // Garante que o valor enviado via PIX seja inteiro
 
         Withdrawal::create([
             'user_id' => $user->id,
             'request_amount' => $amount,
-            'fee_amount' => $fee,
+            'fee_amount' => $amount - $net, // A diferença real incluindo arredondamentos
             'net_amount' => $net,
             'pix_key' => $user->pix_key,
             'pix_key_type' => $user->pix_key_type,
