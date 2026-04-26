@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Efi\EfiPay;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Http;
 
 class EfiService
 {
@@ -133,26 +134,36 @@ class EfiService
                 $formattedKey = preg_replace('/[^0-9]/', '', $pixKey);
             }
 
-            // Montando o corpo estritamente conforme a documentação
             $body = [
                 'valor' => number_format($amount, 2, '.', ''),
                 'chave' => $formattedKey
             ];
 
-            Log::info('Enviando Pix Efí (Requisição Direta ao Endpoint)', [
-                'endpoint' => "/v2/pix/envio/{$idEnvio}",
-                'body' => $body
-            ]);
+            Log::info('Tentando Payout Pix via HTTP Direto', ['idEnvio' => $idEnvio, 'body' => $body]);
 
-            // Chamando o endpoint diretamente para evitar interferência do SDK no body
-            // O método da Efí para requisições manuais é $api->nomeDaRota($params, $body)
-            // No caso de Pix Envio, a rota no SDK é 'pixSend'
-            // Mas vamos tentar passar o idEnvio no params e o body limpo.
-            $response = $this->efi->pixSend(['idEnvio' => (string)$idEnvio], $body);
+            // Obter Token de Acesso manualmente para garantir pureza
+            $auth = base64_encode(config('services.efi.client_id') . ':' . config('services.efi.client_secret'));
+            $certPath = storage_path('app/efi_cert.pem');
             
-            return $response;
+            $tokenResponse = Http::withHeaders(['Authorization' => "Basic $auth"])
+                ->withOptions(['cert' => $certPath])
+                ->post(config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br/oauth/token' : 'https://api-pix.gerencianet.com.br/oauth/token', [
+                    'grant_type' => 'client_credentials'
+                ]);
+
+            $accessToken = $tokenResponse->json()['access_token'];
+
+            // Chamada Final de Envio
+            $baseUrl = config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br' : 'https://api-pix.gerencianet.com.br';
+            $response = Http::withToken($accessToken)
+                ->withOptions(['cert' => $certPath])
+                ->post("$baseUrl/v2/pix/envio/$idEnvio", $body);
+
+            Log::info('Resposta Efí Payout', ['status' => $response->status(), 'data' => $response->json()]);
+
+            return $response->json();
         } catch (\Exception $e) {
-            Log::error('Erro ao enviar Pix (Efi): ' . $e->getMessage());
+            Log::error('Erro crítico no Payout Pix (HTTP): ' . $e->getMessage());
             return null;
         }
     }
