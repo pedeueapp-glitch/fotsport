@@ -227,7 +227,7 @@ class EfiService
                         CURLOPT_SSLCERTTYPE => 'P12',
                         CURLOPT_SSLCERTPASSWD => ''
                     ]
-                ])->get("$baseUrl/v2/gn/pix/payout/$idEnvio");
+                ])->get("$baseUrl/v2/gn/pix/$idEnvio");
 
             return $response->json();
         } catch (\Exception $e) {
