@@ -1,8 +1,10 @@
 <script setup>
-import { Head, Link, useForm } from '@inertiajs/vue3';
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import Footer from '@/Components/Footer.vue';
 import Navbar from '@/Components/Navbar.vue';
+import CheckoutModal from '@/Components/CheckoutModal.vue';
+import FlashMessages from '@/Components/FlashMessages.vue';
 
 import { confirm } from '@/utils/swal';
 
@@ -10,6 +12,16 @@ const props = defineProps({
     purchases: Array,
     customer: Object
 });
+
+const showCheckoutModal = ref(false);
+const checkoutData = ref(null);
+
+watch(() => usePage().props.flash?.checkout_data, (newVal) => {
+    if (newVal) {
+        checkoutData.value = newVal;
+        showCheckoutModal.value = true;
+    }
+}, { immediate: true });
 
 const logoutForm = useForm({});
 const logout = () => {
@@ -71,6 +83,18 @@ onUnmounted(() => window.removeEventListener('keydown', handleKey));
 
     <div class="min-h-screen bg-white flex flex-col font-sans text-brand-dark">
         <Navbar />
+        <FlashMessages />
+
+        <CheckoutModal
+            v-if="checkoutData"
+            :show="showCheckoutModal"
+            :pix-qrcode="checkoutData.pix_qrcode"
+            :pix-copy-paste="checkoutData.pix_copy_paste"
+            :txid="checkoutData.txid"
+            :total="checkoutData.total"
+            :items-count="checkoutData.itemsCount"
+            @close="() => { showCheckoutModal = false; checkoutData = null; }"
+        />
 
         <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
             <header class="mb-20">

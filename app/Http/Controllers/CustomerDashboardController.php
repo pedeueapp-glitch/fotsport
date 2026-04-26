@@ -76,69 +76,34 @@ class CustomerDashboardController extends Controller
             return back()->with('error', 'Não é possível realizar o pagamento desta compra.');
         }
 
-        $purchase->load('photo.event', 'photo.user');
         $photo = $purchase->photo;
-
-        // ── Mercado Pago (reutilizando lógica do StoreController) ──
-        $token = config('services.mercadopago.access_token');
-
-        $items = [[
-            'title'       => 'Foto — ' . ($photo->event->name ?? 'Evento'),
-            'quantity'    => 1,
-            'currency_id' => 'BRL',
-            'unit_price'  => (float) $purchase->amount,
-        ]];
-
-        $preferenceData = [
-            'items' => $items,
-            'external_reference' => (string) $purchase->id,
-            'notification_url' => config('app.url') . '/api/webhook/mercadopago',
-            'back_urls' => [
-                'success' => route('store.success'),
-                'failure' => route('customer.dashboard'),
-                'pending' => route('store.success'),
-            ],
-            'payer' => [
-                'name'  => $customer->name,
-            ],
-        ];
-
-        $response = \Illuminate\Support\Facades\Http::withToken($token)
-            ->post('https://api.mercadopago.com/checkout/preferences', $preferenceData);
-
-        if (!$response->successful()) {
-            return back()->with('error', 'Erro ao criar preferência de pagamento no Mercado Pago.');
+        if (!$photo) {
+            return back()->with('error', 'Foto não encontrada.');
         }
 
-        $preferenceId = $response->json()['id'];
+        // ── Efí Pix (Reutilizando EfiService) ──
+        $efiService = new \App\Services\EfiService();
+        $pixData = $efiService->createPixPayment(
+            $purchase->amount,
+            $customer->name,
+            $customer->cpf ?? '000.000.000-00' // Fallback se não tiver CPF no cadastro
+        );
 
-        return redirect()->route('customer.repay.checkout', [
-            'purchase' => $purchase->id,
-            'preferenceId' => $preferenceId
+        if (!$pixData) {
+            return back()->with('error', 'Erro ao gerar Pix na Efí. Tente novamente em instantes.');
+        }
+
+        // Atualizar o txid na compra
+        $purchase->update([
+            'efi_txid' => $pixData['txid']
         ]);
-    }
 
-    public function showRepayCheckout(Request $request, Purchase $purchase)
-    {
-        $customer = auth()->guard('customer')->user();
-
-        if ($purchase->customer_id !== $customer->id || $purchase->status !== 'pending') {
-            return redirect()->route('customer.dashboard');
-        }
-
-        $preferenceId = $request->query('preferenceId');
-        
-        if (!$preferenceId) {
-             return redirect()->route('customer.dashboard')->with('error', 'Sessão de pagamento expirada.');
-        }
-
-        $purchase->load('photo.event', 'photo.user');
-
-        return Inertia::render('Store/Checkout', [
-            'preferenceId' => $preferenceId,
-            'publicKey'    => config('services.mercadopago.public_key'),
-            'photos'       => [$purchase->photo],
-            'total'        => (float) $purchase->amount,
+        return back()->with('checkout_data', [
+            'pix_qrcode' => $pixData['qrcode'],
+            'pix_copy_paste' => $pixData['copy_paste'],
+            'txid' => $pixData['txid'],
+            'total' => (float) $purchase->amount,
+            'itemsCount' => 1
         ]);
     }
 }
