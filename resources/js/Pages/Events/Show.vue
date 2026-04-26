@@ -49,6 +49,13 @@ const deletePhoto = async (photoId) => {
 // ── Seleção em massa ──────────────────────────────────────────────────────────
 const selectedIds = ref([]);
 
+const deleteEvent = async () => {
+    const result = await confirm('Excluir Evento', 'Tem certeza? Todas as fotos NÃO COMPRADAS serão apagadas permanentemente do servidor.');
+    if (result.isConfirmed) {
+        router.delete(route('events.destroy', props.event.slug));
+    }
+};
+
 const photos = computed(() => props.event.photos ?? []);
 
 const myPhotos = computed(() => photos.value.filter(p => canDelete(p)));
@@ -156,6 +163,11 @@ const submitPriceUpdate = (photoId) => {
                    class="px-5 py-2.5 bg-white border border-gray-200 text-gray-400 hover:text-brand-blue hover:border-brand-blue font-black text-[9px] uppercase tracking-widest rounded-lg transition-all active:scale-95 shadow-sm">
                     Página Pública ↗
                 </a>
+
+                <button v-if="authUser.is_superadmin" @click="deleteEvent"
+                    class="px-5 py-2.5 bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 font-black text-[9px] uppercase tracking-widest rounded-lg transition-all active:scale-95 shadow-sm">
+                    Excluir Evento
+                </button>
             </div>
         </template>
 

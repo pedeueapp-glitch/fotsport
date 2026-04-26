@@ -55,55 +55,56 @@ const openPhotographerRegistration = () => {
                 <div class="flex items-center justify-between mb-8">
                     <div class="flex flex-col">
                         <h3 class="text-xl md:text-2xl font-black text-brand-dark uppercase tracking-tighter mb-1">
-                            Acontecendo <span class="text-brand-orange">Hoje</span>
+                            Eventos <span class="text-brand-orange">Recentes</span>
                         </h3>
                         <div class="h-1.5 w-12 bg-brand-blue rounded-full"></div>
                     </div>
                     
                     <!-- Navegação do Carrossel -->
                     <div class="flex gap-2">
-                        <button @click="scrollToday('left')" class="p-3 rounded-full bg-gray-50 hover:bg-brand-blue hover:text-white transition-all shadow-sm active:scale-95">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        <button @click="scrollToday('left')" class="p-2 md:p-3 rounded-full bg-gray-50 hover:bg-brand-blue hover:text-white transition-all shadow-sm active:scale-95">
+                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
                         </button>
-                        <button @click="scrollToday('right')" class="p-3 rounded-full bg-gray-50 hover:bg-brand-blue hover:text-white transition-all shadow-sm active:scale-95">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                        <button @click="scrollToday('right')" class="p-2 md:p-3 rounded-full bg-gray-50 hover:bg-brand-blue hover:text-white transition-all shadow-sm active:scale-95">
+                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
                         </button>
                     </div>
                 </div>
 
                 <div 
                     ref="todayScrollRef"
-                    class="flex gap-4 md:gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-8 scroll-smooth"
+                    class="flex gap-3 md:gap-6 overflow-x-auto snap-x snap-mandatory no-scrollbar pb-8 scroll-smooth"
                 >
                     <Link 
                         v-for="event in todayEvents" 
                         :key="event.id" 
                         :href="route('store.event', event)" 
-                        class="flex-shrink-0 w-[85%] md:w-[calc(33.333%-16px)] snap-start group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full"
+                        class="flex-shrink-0 w-[calc(50%-6px)] md:w-[calc(33.333%-16px)] snap-start group bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden flex flex-col h-full"
                     >
-                        <div class="h-56 md:h-64 w-full bg-brand-dark relative overflow-hidden shrink-0">
+                        <div class="h-32 md:h-64 w-full bg-brand-dark relative overflow-hidden shrink-0">
                             <template v-if="event.photos && event.photos.length > 0">
                                 <img :src="'/' + event.photos[0].watermarked_path" 
                                     class="w-full h-full object-cover opacity-80 group-hover:scale-110 transition duration-700 blur-[0px] group-hover:blur-0" />
                             </template>
-                            <div class="absolute top-4 left-4 z-10">
-                                <span class="bg-brand-orange text-white text-[9px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg animate-pulse">
+                            <div class="absolute top-2 left-2 md:top-4 md:left-4 z-10">
+                                <span class="bg-brand-orange text-white text-[7px] md:text-[9px] font-black px-2 py-1 md:px-3 md:py-1.5 rounded-full uppercase tracking-widest shadow-lg animate-pulse">
                                     Ao Vivo
                                 </span>
                             </div>
                         </div>
 
-                        <div class="p-6 md:p-8 flex-grow flex flex-col bg-white">
-                            <p class="text-[9px] font-black text-brand-blue uppercase tracking-[0.2em] mb-2">{{ event.location }}</p>
-                            <div class="h-10 md:h-12 flex items-start mb-4"> <!-- Altura fixa para o título -->
-                                <h3 class="font-black text-lg md:text-xl text-brand-dark group-hover:text-brand-blue transition duration-300 uppercase tracking-tighter line-clamp-2 leading-tight">
+                        <div class="p-4 md:p-8 flex-grow flex flex-col bg-white">
+                            <p class="text-[7px] md:text-[9px] font-black text-brand-blue uppercase tracking-[0.2em] mb-1 md:mb-2">{{ event.location }}</p>
+                            <div class="h-8 md:h-12 flex items-start mb-2 md:mb-4"> <!-- Altura fixa para o título -->
+                                <h3 class="font-black text-xs md:text-xl text-brand-dark group-hover:text-brand-blue transition duration-300 uppercase tracking-tighter line-clamp-2 leading-tight">
                                     {{ event.name }}
                                 </h3>
                             </div>
                             
-                            <div class="mt-auto pt-6 border-t border-gray-50 flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-brand-dark transition-colors">
-                                <span>{{ event.photos_count || 0 }} Fotos</span>
-                                <span class="bg-brand-blue/5 text-brand-blue px-3 py-1 rounded-lg group-hover:bg-brand-blue group-hover:text-white transition-all">Buscar →</span>
+                            <div class="mt-auto pt-2 md:pt-6 border-t border-gray-50 flex justify-between items-center text-[7px] md:text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-brand-dark transition-colors">
+                                <span class="hidden sm:inline">{{ event.photos_count || 0 }} Fotos</span>
+                                <span class="sm:hidden">{{ event.photos_count || 0 }} F</span>
+                                <span class="bg-brand-blue/5 text-brand-blue px-2 py-1 md:px-3 md:py-1 rounded-lg group-hover:bg-brand-blue group-hover:text-white transition-all">Buscar →</span>
                             </div>
                         </div>
                     </Link>
@@ -224,13 +225,13 @@ const openPhotographerRegistration = () => {
 .font-sans {
     font-family: 'Inter', sans-serif;
 }
-</style>
 
-
-<style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap');
-
-.font-sans {
-    font-family: 'Inter', sans-serif;
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 </style>
+

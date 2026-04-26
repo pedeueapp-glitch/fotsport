@@ -11,6 +11,7 @@ const form = useForm({
     name: props.photographer.name,
     email: props.photographer.email,
     is_active: props.photographer.is_active,
+    is_verified: props.photographer.is_verified,
     is_superadmin: props.photographer.is_superadmin,
     password: '',
     password_confirmation: '',
@@ -35,30 +36,34 @@ const submit = () => {
         </template>
 
         <div class="max-w-2xl">
-            <form @submit.prevent="submit" class="space-y-6 bg-gray-50 p-8 rounded-xl border border-gray-100 shadow-sm italic">
+            <form @submit.prevent="submit" class="space-y-6 bg-gray-50 p-8 rounded-xl border border-gray-100 shadow-sm">
                 <div class="space-y-2">
-                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest italic ml-1">Nome Completo</label>
+                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Nome Completo</label>
                     <input v-model="form.name" type="text" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" required />
                 </div>
 
                 <div class="space-y-2">
-                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest italic ml-1">E-mail de Acesso</label>
+                    <label class="block text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">E-mail de Acesso</label>
                     <input v-model="form.email" type="email" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" required />
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div class="p-4 bg-white rounded-xl border border-gray-100 flex items-center justify-between shadow-sm">
-                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest italic">Conta Ativa</span>
+                        <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">Conta Ativa</span>
                         <input v-model="form.is_active" type="checkbox" class="w-5 h-5 rounded text-brand-blue border-gray-200 focus:ring-brand-blue/10" />
                     </div>
                     <div class="p-4 bg-white rounded-xl border border-gray-100 flex items-center justify-between shadow-sm">
-                        <span class="text-[9px] font-black text-brand-orange uppercase tracking-widest italic">SuperAdmin</span>
+                        <span class="text-[9px] font-black text-blue-500 uppercase tracking-widest">Verificado</span>
+                        <input v-model="form.is_verified" type="checkbox" class="w-5 h-5 rounded text-blue-500 border-gray-200 focus:ring-blue-500/10" />
+                    </div>
+                    <div class="p-4 bg-white rounded-xl border border-gray-100 flex items-center justify-between shadow-sm">
+                        <span class="text-[9px] font-black text-brand-orange uppercase tracking-widest">SuperAdmin</span>
                         <input v-model="form.is_superadmin" type="checkbox" class="w-5 h-5 rounded text-brand-orange border-gray-200 focus:ring-brand-orange/10" />
                     </div>
                 </div>
 
                 <div class="pt-6 border-t border-gray-200 space-y-4">
-                    <p class="text-[9px] font-black text-red-400 uppercase tracking-widest italic ml-1">Alterar Senha (Opcional)</p>
+                    <p class="text-[9px] font-black text-red-400 uppercase tracking-widest ml-1">Alterar Senha (Opcional)</p>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <input v-model="form.password" type="password" placeholder="Nova senha" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" />
                         <input v-model="form.password_confirmation" type="password" placeholder="Confirmar nova senha" class="w-full h-12 bg-white border border-gray-200 rounded-xl px-5 font-bold text-xs focus:ring-2 focus:ring-brand-blue/10 focus:border-brand-blue" />

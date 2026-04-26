@@ -12,6 +12,8 @@ class Brand extends Model
     protected $fillable = [
         'name',
         'logo_path',
-        'is_active'
+        'instagram_url',
+        'is_active',
+        'order'
     ];
 }

@@ -1,10 +1,16 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 
 defineProps({
     events: Array
 });
+
+const deleteEvent = (event) => {
+    if (confirm('Tem certeza que deseja excluir este evento? Todas as fotos NÃO COMPRADAS serão apagadas permanentemente do servidor.')) {
+        router.delete(route('events.destroy', event.slug));
+    }
+};
 </script>
 
 <template>
@@ -37,12 +43,22 @@ defineProps({
                                 <p class="text-sm text-gray-600 mb-4">{{ event.date }} - {{ event.location }}</p>
                                 <p class="text-gray-700 text-sm mb-4 truncate">{{ event.description }}</p>
                                 
-                                <Link
-                                    :href="route('events.show', event)"
-                                    class="text-indigo-600 hover:text-indigo-900 font-medium"
-                                >
-                                    Gerenciar Fotos &rarr;
-                                </Link>
+                                <div class="flex justify-between items-center">
+                                    <Link
+                                        :href="route('events.show', event)"
+                                        class="text-indigo-600 hover:text-indigo-900 font-medium"
+                                    >
+                                        Gerenciar Fotos &rarr;
+                                    </Link>
+
+                                    <button 
+                                        v-if="$page.props.auth.user.is_superadmin"
+                                        @click="deleteEvent(event)"
+                                        class="text-red-600 hover:text-red-800 text-sm font-medium"
+                                    >
+                                        Excluir Evento
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

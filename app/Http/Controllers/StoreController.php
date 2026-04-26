@@ -44,7 +44,7 @@ class StoreController extends Controller
         // Vou fundir futuros e passados em uma lista única e manter os de hoje separados.
         $otherEvents = $futureEvents->concat($pastEvents);
 
-        $brands = Brand::where('is_active', true)->get();
+        $brands = Brand::where('is_active', true)->orderBy('order')->orderBy('name')->get();
         $heroItems = HeroItem::where('is_active', true)->orderBy('order')->get();
 
         return Inertia::render('Store/Index', [
@@ -88,8 +88,8 @@ class StoreController extends Controller
             $faceApiUrl = config('services.face_api.url');
             Log::info('Iniciando busca facial otimizada', ['event_id' => $request->event_id]);
             
-            // 1. Obter a encoding da selfie
-            $selfieResponse = Http::timeout(30)
+            // 1. Obter a encoding da selfie - Aumentado para 60s
+            $selfieResponse = Http::timeout(60)
                 ->attach('file', fopen($file->getRealPath(), 'r'), 'selfie.jpg')
                 ->post($faceApiUrl . '/get_face_encodings/');
 
@@ -117,8 +117,8 @@ class StoreController extends Controller
                 $candidatesMap[$c->id] = $c->face_descriptors;
             }
 
-            // 3. Enviar para comparação matemática no serviço Python
-            $compareResponse = Http::timeout(60)->asForm()->post($faceApiUrl . '/compare_faces/', [
+            // 3. Enviar para comparação matemática no serviço Python - Aumentado para 120s
+            $compareResponse = Http::timeout(120)->asForm()->post($faceApiUrl . '/compare_faces/', [
                 'source_encoding' => json_encode($selfieEncoding),
                 'candidates'      => json_encode($candidatesMap)
             ]);
@@ -161,7 +161,7 @@ class StoreController extends Controller
         // Recupera as fotos respeitando a ordem de relevância retornada pela IA
         $idsString = implode(',', $matchIds);
         $photos = Photo::whereIn('id', $matchIds)
-            ->with('event')
+            ->with(['event', 'user'])
             ->orderByRaw("FIELD(id, $idsString)")
             ->get();
 
@@ -198,14 +198,12 @@ class StoreController extends Controller
             return back()->with('error', 'Nenhuma foto selecionada.');
         }
 
-        // ── Mercado Pago (via API direta para evitar bugs do SDK no PHP 8.2) ──
-        $token = config('services.mercadopago.access_token');
+        // ── Efi Pay Pix (via EfiService) ──
+        $efiService = new \App\Services\EfiService();
 
         // Cria registros de compra com status 'pending' e coleta seus IDs
         $purchaseIds = [];
-        $items       = [];
         $total       = 0;
-
         $customerId = auth()->guard('customer')->id();
 
         foreach ($photos as $photo) {
@@ -216,61 +214,33 @@ class StoreController extends Controller
                 'amount'   => $photo->price,
             ]);
             $purchaseIds[] = $purchase->id;
-
-            $items[] = [
-                'title'       => 'Foto — ' . ($photo->event->name ?? 'Evento'),
-                'quantity'    => 1,
-                'currency_id' => 'BRL',
-                'unit_price'  => (float) $photo->price,
-            ];
             $total += $photo->price;
         }
 
-        $preferenceData = [
-            'items' => $items,
-            'external_reference' => implode(',', $purchaseIds),
-            'notification_url' => config('app.url') . '/api/webhook/mercadopago',
-            'back_urls' => [
-                'success' => route('store.success'),
-                'failure' => route('store.index'),
-                'pending' => route('store.success'),
-            ],
-        ];
+        $customer = auth()->guard('customer')->user();
+        $pixData = $efiService->createPixPayment($total, $customer->name, $customer->cpf);
 
-        if (auth()->guard('customer')->check()) {
-            $customer = auth()->guard('customer')->user();
-            $preferenceData['payer'] = [
-                'name'  => $customer->name,
-                'email' => $customer->cpf . '@fotsport.com.br', // Email fictício baseado no CPF para satisfazer o SDK
-            ];
+        if (!$pixData) {
+            return back()->with('error', 'Erro ao gerar pagamento Pix. Tente novamente mais tarde.');
         }
 
-        $response = Http::withToken($token)
-            ->post('https://api.mercadopago.com/checkout/preferences', $preferenceData);
-
-        if (!$response->successful()) {
-            Log::error('Mercado Pago Error', ['response' => $response->json(), 'token_prefix' => substr($token, 0, 10)]);
-            return back()->with('error', 'Erro ao criar preferência de pagamento no Mercado Pago.');
-        }
-
-        $preferenceId = $response->json()['id'];
-        $publicKey    = config('services.mercadopago.public_key');
+        // Associa o TXID às compras
+        Purchase::whereIn('id', $purchaseIds)->update(['efi_txid' => $pixData['txid']]);
 
         if ($request->wantsJson() || $request->header('X-Inertia')) {
             return back()->with('checkout_data', [
-                'preferenceId' => $preferenceId,
-                'publicKey'    => $publicKey,
-                'total'        => $total,
-                'itemsCount'   => count($photoIds),
-                'initPoint'    => $response->json()['init_point'],
+                'pix_qrcode' => $pixData['qrcode'],
+                'pix_copy_paste' => $pixData['copy_paste'],
+                'total' => $total,
+                'itemsCount' => count($photoIds),
             ]);
         }
 
         return Inertia::render('Store/Checkout', [
-            'preferenceId' => $preferenceId,
-            'publicKey'    => $publicKey,
-            'photos'       => $photos->load(['event', 'user']),
-            'total'        => $total,
+            'pix_qrcode' => $pixData['qrcode'],
+            'pix_copy_paste' => $pixData['copy_paste'],
+            'photos' => $photos->load(['event', 'user']),
+            'total' => (float) $total,
         ]);
     }
 
@@ -338,7 +308,7 @@ class StoreController extends Controller
     {
         $photographers = \App\Models\User::where('is_active', true)
             ->latest()
-            ->get(['id', 'name', 'slug', 'avatar']);
+            ->get(['id', 'name', 'slug', 'avatar', 'is_verified']);
 
         return Inertia::render('Store/Photographers', [
             'photographers' => $photographers

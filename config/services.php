@@ -31,14 +31,12 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'mercadopago' => [
-        'sandbox' => env('MERCADOPAGO_SANDBOX', true),
-        'public_key' => env('MERCADOPAGO_SANDBOX', true) 
-            ? env('MERCADOPAGO_TEST_PUBLIC_KEY') 
-            : env('MERCADOPAGO_PROD_PUBLIC_KEY'),
-        'access_token' => env('MERCADOPAGO_SANDBOX', true) 
-            ? env('MERCADOPAGO_TEST_ACCESS_TOKEN') 
-            : env('MERCADOPAGO_PROD_ACCESS_TOKEN'),
+    'efi' => [
+        'sandbox' => env('EFI_SANDBOX', true),
+        'client_id' => env('EFI_CLIENT_ID'),
+        'client_secret' => env('EFI_CLIENT_SECRET'),
+        'certificate' => env('EFI_CERTIFICATE'),
+        'pix_key' => env('EFI_PIX_KEY'),
     ],
 
     'face_api' => [

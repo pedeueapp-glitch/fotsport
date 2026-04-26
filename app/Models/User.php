@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'is_superadmin',
         'is_active',
+        'is_verified',
         'balance',
         'pix_key',
         'document',
@@ -57,6 +58,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'is_superadmin' => 'boolean',
         'is_active' => 'boolean',
+        'is_verified' => 'boolean',
     ];
 
     public function events()

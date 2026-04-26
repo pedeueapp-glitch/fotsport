@@ -69,6 +69,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/photographers', [\App\Http\Controllers\Admin\AdminController::class, 'photographers'])->name('admin.photographers.index');
         Route::get('/photographers/{user}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'editPhotographer'])->name('admin.photographers.edit');
         Route::patch('/photographers/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'updatePhotographer'])->name('admin.photographers.update');
+        Route::patch('/photographers/{user}/verify', [\App\Http\Controllers\Admin\AdminController::class, 'toggleVerified'])->name('admin.photographers.verify');
         
         // Gestão de Eventos
         Route::get('/events', [\App\Http\Controllers\Admin\AdminController::class, 'events'])->name('admin.events.index');

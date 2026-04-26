@@ -4,15 +4,16 @@ import numpy as np
 import json
 import os
 import uuid
-from PIL import Image
+from PIL import Image, ImageOps
 import threading
 import logging
+import shutil
 
 # Configuração de logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Foco Radical Face Service")
+app = FastAPI(title="Fotsport Face Service")
 
 DB_FILE = "encodings.json"
 db_lock = threading.Lock()
@@ -36,21 +37,27 @@ def save_encodings(data):
         except Exception as e:
             logger.error(f"Error saving encodings: {e}")
 
-def resize_image(image_path, max_size=1200):
+def resize_image(image_path, max_size=1000):
+    """Redimensiona a imagem e corrige a orientação EXIF."""
     try:
         with Image.open(image_path) as img:
+            # Corrige orientação baseada no EXIF (importante para fotos mobile)
+            img = ImageOps.exif_transpose(img)
+            
             img = img.convert("RGB")
+            
             # Calcula proporção mantendo aspecto
-            ratio = min(max_size / img.size[0], max_size / img.size[1])
-            if ratio < 1:
-                new_size = (int(img.size[0] * ratio), int(img.size[1] * ratio))
+            width, height = img.size
+            if width > max_size or height > max_size:
+                ratio = min(max_size / width, max_size / height)
+                new_size = (int(width * ratio), int(height * ratio))
                 img = img.resize(new_size, Image.Resampling.LANCZOS)
+                logger.info(f"Resized image from {width}x{height} to {new_size}")
                 img.save(image_path, "JPEG", quality=85)
             else:
-                # Mesmo que não precise redimensionar, garantimos que seja um JPEG RGB
                 img.save(image_path, "JPEG", quality=90)
     except Exception as e:
-        logger.error(f"Error resizing: {e}")
+        logger.error(f"Error resizing/processing: {e}")
 
 @app.get("/")
 def root():
@@ -62,9 +69,9 @@ def index_photo(photo_id: str = Form(...), event_id: str = Form(None), file: Upl
     try:
         logger.info(f"Indexing photo {photo_id} for event {event_id}")
         
-        img_data = file.file.read()
-        with open(temp_filename, "wb") as f:
-            f.write(img_data)
+        # Salva o arquivo usando streaming para economizar RAM
+        with open(temp_filename, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
             
         resize_image(temp_filename)
             
@@ -114,9 +121,9 @@ def get_face_encodings(file: UploadFile = File(...)):
     """Apenas extrai as encodings de uma imagem sem salvar no banco local."""
     temp_filename = f"temp_ext_{uuid.uuid4().hex}.jpg"
     try:
-        img_data = file.file.read()
-        with open(temp_filename, "wb") as f:
-            f.write(img_data)
+        # Salva o arquivo usando streaming
+        with open(temp_filename, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
             
         resize_image(temp_filename)
         image = face_recognition.load_image_file(temp_filename)
@@ -151,6 +158,10 @@ def compare_faces(
                 continue
                 
             # Converter cada encoding do candidato para numpy
+            # candidates_data[photo_id] pode ser uma string JSON ou uma lista de listas
+            if isinstance(encodings, str):
+                encodings = json.loads(encodings)
+                
             candidate_encs = [np.array(enc) for enc in encodings]
             
             # Calcular distâncias
@@ -181,9 +192,9 @@ def search_face(event_id: str = Form(None), file: UploadFile = File(...)):
     try:
         logger.info(f"Searching face in event {event_id}")
         
-        img_data = file.file.read()
-        with open(temp_filename, "wb") as f:
-            f.write(img_data)
+        # Salva o arquivo usando streaming
+        with open(temp_filename, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
             
         resize_image(temp_filename)
             

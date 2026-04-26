@@ -41,7 +41,11 @@ const scrollBrands = (direction) => {
             <div ref="brandScroll" 
                  class="flex items-center justify-center gap-16 overflow-x-auto scrollbar-hide scroll-smooth snap-x">
                 <div v-for="brand in brands" :key="brand.id" class="flex-shrink-0 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer snap-center">
-                    <img :src="brand.logo_path" :alt="brand.name" class="h-8 md:h-10 w-auto object-contain" />
+                    <component :is="brand.instagram_url ? 'a' : 'div'" 
+                               :href="brand.instagram_url" 
+                               :target="brand.instagram_url ? '_blank' : null">
+                        <img :src="brand.logo_path" :alt="brand.name" class="h-8 md:h-10 w-auto object-contain" />
+                    </component>
                 </div>
                 
                 <!-- Fallback if no brands -->

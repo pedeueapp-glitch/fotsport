@@ -63,17 +63,24 @@ class AdminController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
             'is_active' => 'required|boolean',
+            'is_verified' => 'required|boolean',
             'is_superadmin' => 'required|boolean',
             'password' => 'nullable|min:8|confirmed',
         ]);
 
-        $user->update($request->only(['name', 'email', 'is_active', 'is_superadmin']));
+        $user->update($request->only(['name', 'email', 'is_active', 'is_verified', 'is_superadmin']));
 
         if ($request->filled('password')) {
             $user->update(['password' => Hash::make($request->password)]);
         }
 
         return redirect()->route('admin.photographers.index')->with('success', 'Fotógrafo atualizado com sucesso.');
+    }
+
+    public function toggleVerified(User $user)
+    {
+        $user->update(['is_verified' => !$user->is_verified]);
+        return back()->with('success', 'Status de verificação atualizado.');
     }
 
     /**

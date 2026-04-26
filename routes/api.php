@@ -18,4 +18,4 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::post('/webhook/mercadopago', [\App\Http\Controllers\MercadoPagoWebhookController::class, 'handle'])->name('api.mercadopago.webhook');
+Route::post('/webhook/efi', [\App\Http\Controllers\EfiWebhookController::class, 'handle'])->name('api.efi.webhook');

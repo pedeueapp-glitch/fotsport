@@ -31,7 +31,7 @@ onMounted(() => {
     });
     window.addEventListener('show-photographer-modal', () => {
         showPhotographerModal.value = true;
-        isLoginMode = false;
+        isLoginMode.value = false;
     });
 });
 
@@ -247,6 +247,7 @@ const toggleMobileMenu = () => {
                                         <div class="h-px bg-gray-200/50 mx-4 my-2"></div>
                                         <p class="text-[8px] font-black text-brand-orange uppercase tracking-widest px-4 mb-1">Administração</p>
                                         <Link :href="route('admin.photographers.index')" @click="mobileMenuOpen = false" class="block text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em] py-3 px-4 hover:text-brand-orange">Gerenciar Fotógrafos</Link>
+                                        <Link :href="route('admin.customers.index')" @click="mobileMenuOpen = false" class="block text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em] py-3 px-4 hover:text-brand-orange">Gerenciar Clientes</Link>
                                         <Link :href="route('admin.events.index')" @click="mobileMenuOpen = false" class="block text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em] py-3 px-4 hover:text-brand-orange">Todos Eventos</Link>
                                         <Link :href="route('admin.withdrawals.index')" @click="mobileMenuOpen = false" class="block text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em] py-3 px-4 hover:text-brand-orange">Aprovar Saques</Link>
                                         <Link :href="route('admin.billing.index')" @click="mobileMenuOpen = false" class="block text-gray-500 font-bold text-[10px] uppercase tracking-[0.2em] py-3 px-4 hover:text-brand-orange">Faturamento Global</Link>

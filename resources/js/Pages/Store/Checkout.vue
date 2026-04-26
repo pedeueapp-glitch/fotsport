@@ -1,45 +1,23 @@
 <script setup>
 import { Head, Link } from '@inertiajs/vue3';
-import { onMounted } from 'vue';
+import { ref } from 'vue';
 import Footer from '@/Components/Footer.vue';
 import Navbar from '@/Components/Navbar.vue';
 
 const props = defineProps({
-    preferenceId: String,
-    publicKey: String,
+    pix_qrcode: String,
+    pix_copy_paste: String,
     photos: Array,
     total: Number
 });
 
-onMounted(() => {
-    // Carrega SDK oficial do Mercado Pago v2
-    const script = document.createElement('script');
-    script.src = 'https://sdk.mercadopago.com/js/v2';
-    script.onload = () => {
-        const mp = new window.MercadoPago(props.publicKey, {
-            locale: 'pt-BR'
-        });
+const copied = ref(false);
 
-        // Wallet Brick — botão de pagamento oficial MP
-        mp.bricks().create('wallet', 'mp-wallet-container', {
-            initialization: {
-                preferenceId: props.preferenceId,
-                redirectMode: 'self',   // Redireciona a própria página para o MP
-            },
-            customization: {
-                texts: {
-                    action: 'pay',
-                    valueProp: 'smart_option',
-                },
-                visual: {
-                    buttonBackground: 'black',
-                    borderRadius: '24px',
-                }
-            },
-        });
-    };
-    document.head.appendChild(script);
-});
+const copyPix = () => {
+    navigator.clipboard.writeText(props.pix_copy_paste);
+    copied.value = true;
+    setTimeout(() => copied.value = false, 2000);
+};
 </script>
 
 <template>
@@ -72,7 +50,12 @@ onMounted(() => {
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[10px] text-brand-orange uppercase font-black tracking-widest mb-1">{{ photo.event ? photo.event.name : 'Série Exclusiva' }}</p>
-                                <p class="text-brand-dark font-black text-lg truncate mb-2 leading-none">{{ photo.user ? photo.user.name : 'Fotógrafo Oficial' }}</p>
+                                <p class="text-brand-dark font-black text-lg truncate mb-2 leading-none flex items-center gap-1.5">
+                                    {{ photo.user ? photo.user.name : 'Fotógrafo Oficial' }}
+                                    <svg v-if="photo.user?.is_verified" class="w-4 h-4 text-blue-500 fill-current shrink-0" viewBox="0 0 24 24">
+                                        <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                                    </svg>
+                                </p>
                                 <p class="text-brand-blue font-black">R$ {{ Number(photo.price).toFixed(2) }}</p>
                             </div>
                         </div>
@@ -98,11 +81,31 @@ onMounted(() => {
 
                             <div class="pt-8 border-t border-white/10">
                                 <p class="text-[10px] text-center text-white/30 mb-6 uppercase font-black tracking-widest">
-                                    Pagamento Seguro Mercado Pago
+                                    Pague com Pix (Efi Pay)
                                 </p>
 
-                                <!-- Container onde o SDK do MP injeta o botão -->
-                                <div id="mp-wallet-container" class="w-full"></div>
+                                <div class="flex flex-col items-center gap-6">
+                                    <div class="bg-white p-4 rounded-3xl shadow-xl">
+                                        <img :src="pix_qrcode" class="w-48 h-48" alt="Pix QR Code" />
+                                    </div>
+
+                                    <div class="w-full space-y-3">
+                                        <button 
+                                            @click="copyPix"
+                                            class="w-full bg-brand-orange hover:bg-white hover:text-brand-dark text-white font-black py-4 rounded-2xl transition-all uppercase text-[10px] tracking-widest shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                                        >
+                                            <template v-if="!copied">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"/></svg>
+                                                Copiar Código Pix
+                                            </template>
+                                            <template v-else>
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                                Copiado!
+                                            </template>
+                                        </button>
+                                        <p class="text-[9px] text-center text-white/20 uppercase font-black tracking-[0.2em]">Após pagar, você será redirecionado automaticamente</p>
+                                    </div>
+                                </div>
 
                                 <div class="mt-8 flex justify-center items-center gap-4 opacity-30 group">
                                     <span class="h-px bg-white flex-grow"></span>

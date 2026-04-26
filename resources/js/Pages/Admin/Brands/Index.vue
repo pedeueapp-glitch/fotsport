@@ -15,12 +15,16 @@ const logoPreview = ref(null);
 
 const form = useForm({
     name: '',
-    logo: null
+    logo: null,
+    order: 0,
+    instagram_url: ''
 });
 
 const openCreate = () => {
     editingBrand.value = null;
     form.reset();
+    form.order = 0;
+    form.instagram_url = '';
     logoPreview.value = null;
     showModal.value = true;
 };
@@ -29,6 +33,8 @@ const openEdit = (brand) => {
     editingBrand.value = brand;
     form.name = brand.name;
     form.logo = null;
+    form.order = brand.order || 0;
+    form.instagram_url = brand.instagram_url || '';
     logoPreview.value = brand.logo_path;
     showModal.value = true;
 };
@@ -89,7 +95,10 @@ const deleteBrand = async (brand) => {
             <div v-for="brand in brands" :key="brand.id" 
                  class="bg-white border p-6 rounded-xl relative group transition-all hover:border-brand-blue hover:shadow-lg">
                 
-                <div class="h-20 flex items-center justify-center mb-6">
+                <div class="h-20 flex items-center justify-center mb-6 relative">
+                    <div class="absolute -top-2 -left-2 bg-brand-blue text-white text-[8px] font-black w-6 h-6 rounded-lg flex items-center justify-center shadow-lg">
+                        #{{ brand.order }}
+                    </div>
                     <img :src="brand.logo_path" :alt="brand.name" class="max-h-full object-contain filter grayscale group-hover:grayscale-0 transition-all duration-500">
                 </div>
 
@@ -132,9 +141,20 @@ const deleteBrand = async (brand) => {
                     </h3>
 
                     <form @submit.prevent="submit" class="space-y-6">
+                        <div class="grid grid-cols-3 gap-4">
+                            <div class="col-span-2">
+                                <label class="block text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nome da Marca</label>
+                                <input v-model="form.name" type="text" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold" placeholder="Ex: Nike, Adidas..." required>
+                            </div>
+                            <div>
+                                <label class="block text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Ordem</label>
+                                <input v-model="form.order" type="number" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold text-center" required>
+                            </div>
+                        </div>
+
                         <div>
-                            <label class="block text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Nome da Marca</label>
-                            <input v-model="form.name" type="text" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold" placeholder="Ex: Nike, Adidas..." required>
+                            <label class="block text-[8px] font-black text-gray-400 uppercase tracking-[0.2em] mb-2 ml-1">Link do Instagram</label>
+                            <input v-model="form.instagram_url" type="url" class="w-full px-5 py-3.5 bg-gray-50 border border-gray-100 rounded-xl text-xs font-bold" placeholder="https://instagram.com/perfil">
                         </div>
                         
                         <div>

@@ -1,0 +1,73 @@
+name: Deploy to VPS
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies and Build Assets
+        run: |
+          npm install
+          npm run build
+
+      - name: Create Deployment Package
+        run: |
+          # Criar o tar.gz excluindo .env e node_modules
+          tar -czf deploy.tar.gz \
+            docker \
+            face_service \
+            public \
+            Dockerfile \
+            docker-compose.yml \
+            app \
+            resources \
+            routes \
+            config \
+            database \
+            bootstrap \
+            composer.json \
+            composer.lock \
+            package.json \
+            artisan \
+            vite.config.js \
+            tailwind.config.js
+
+      - name: Copy Files to VPS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "deploy.tar.gz"
+          target: "/root/fotsport/"
+
+      - name: Execute Remote Commands
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /root/fotsport
+            rm -rf app resources routes public/build
+            tar -xzf deploy.tar.gz
+            rm deploy.tar.gz
+            docker compose down
+            docker compose build app
+            docker compose up -d
+            # Aguardar o container subir antes de rodar comandos dentro dele
+            sleep 10
+            docker exec fotsport-app sh -c 'rm -rf public/storage && ln -snf ../storage/app/public public/storage && chown -R www-data:www-data storage bootstrap/cache && chmod -R 777 storage bootstrap/cache && php artisan migrate --force'

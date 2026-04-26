@@ -13,7 +13,7 @@ class BrandController extends Controller
     public function index()
     {
         return Inertia::render('Admin/Brands/Index', [
-            'brands' => Brand::latest()->get()
+            'brands' => Brand::orderBy('order')->orderBy('name')->get()
         ]);
     }
 
@@ -22,6 +22,8 @@ class BrandController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'logo' => 'required|image|max:2048',
+            'order' => 'nullable|integer',
+            'instagram_url' => 'nullable|url|max:255',
         ]);
 
         $logoPath = $request->file('logo')->store('brands', 'public');
@@ -29,6 +31,8 @@ class BrandController extends Controller
         Brand::create([
             'name' => $request->name,
             'logo_path' => '/storage/' . $logoPath,
+            'instagram_url' => $request->instagram_url,
+            'order' => $request->order ?? 0,
         ]);
 
         return redirect()->back();
@@ -45,9 +49,15 @@ class BrandController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'logo' => 'nullable|image|max:2048',
+            'order' => 'nullable|integer',
+            'instagram_url' => 'nullable|url|max:255',
         ]);
 
-        $data = ['name' => $request->name];
+        $data = [
+            'name' => $request->name,
+            'order' => $request->order ?? 0,
+            'instagram_url' => $request->instagram_url,
+        ];
 
         if ($request->hasFile('logo')) {
             // Remove old file

@@ -103,6 +103,24 @@ const menuItems = [
 
             <!-- Content Area -->
             <main class="flex-grow min-w-0">
+                <!-- Mobile Admin Navigation (Quick links) -->
+                <div class="md:hidden w-full mb-6">
+                    <div class="bg-white border border-gray-100 rounded-xl p-2 flex overflow-x-auto no-scrollbar gap-2 shadow-sm">
+                        <Link
+                            v-for="item in menuItems.slice(0, 5)"
+                            :key="'mob-' + item.route"
+                            :href="route(item.route)"
+                            :class="route().current(item.active || item.route)
+                                ? 'bg-brand-blue text-white shadow-md'
+                                : 'text-gray-500 bg-gray-50'"
+                            class="flex-shrink-0 flex items-center gap-2 px-4 py-3 rounded-lg font-bold text-[9px] uppercase tracking-tighter transition-all"
+                        >
+                            <span v-html="item.icon" class="w-3 h-3 opacity-70"></span>
+                            {{ item.label }}
+                        </Link>
+                    </div>
+                </div>
+
                 <div class="bg-white border border-gray-100 rounded-xl p-8 md:p-10 shadow-sm min-h-[600px]">
                     <header v-if="title" class="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                         <div>

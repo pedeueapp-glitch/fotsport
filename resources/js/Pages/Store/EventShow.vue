@@ -40,7 +40,68 @@ const searchForm = useForm({
     event_id: props.event.id
 });
 
-const handleFileUpload = (e) => { searchForm.selfie = e.target.files[0]; };
+const isResizing = ref(false);
+
+const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    isResizing.value = true;
+    try {
+        const resizedFile = await resizeImage(file, 1000, 1000);
+        searchForm.selfie = resizedFile;
+    } catch (error) {
+        console.error('Erro ao redimensionar imagem:', error);
+        // Fallback para o arquivo original se falhar
+        searchForm.selfie = file;
+    } finally {
+        isResizing.value = false;
+    }
+};
+
+const resizeImage = (file, maxWidth, maxHeight) => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const resizedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    resolve(resizedFile);
+                }, 'image/jpeg', 0.85);
+            };
+            img.onerror = (err) => reject(err);
+        };
+        reader.onerror = (err) => reject(err);
+    });
+};
+
 const searchFaces = () => { searchForm.post(route('store.search')); };
 
 // ── Seleção e checkout ────────────────────────────────────────────────────────
@@ -188,8 +249,12 @@ const portfolioUrl = (user) => {
                                     </div>
                                 </label>
                                 
-                                <PrimaryButton :disabled="searchForm.processing || !searchForm.selfie" class="w-full justify-center h-16 rounded-2xl text-[11px] font-black uppercase tracking-[.3em] bg-brand-dark hover:bg-black shadow-2xl shadow-brand-dark/20 transition-all">
-                                    <span v-if="searchForm.processing" class="flex items-center gap-3">
+                                <PrimaryButton :disabled="searchForm.processing || !searchForm.selfie || isResizing" class="w-full justify-center h-16 rounded-2xl text-[11px] font-black uppercase tracking-[.3em] bg-brand-dark hover:bg-black shadow-2xl shadow-brand-dark/20 transition-all">
+                                    <span v-if="isResizing" class="flex items-center gap-3">
+                                        <div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                        Otimizando Imagem...
+                                    </span>
+                                    <span v-else-if="searchForm.processing" class="flex items-center gap-3">
                                         <div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
                                         Analisando Características...
                                     </span>
@@ -256,7 +321,12 @@ const portfolioUrl = (user) => {
                             <div class="mb-4">
                                 <div class="flex items-center gap-2 mb-1">
                                     <div class="h-0.5 w-3 bg-brand-orange rounded-full"></div>
-                                    <span v-if="photo.user" class="text-[8px] font-black text-brand-orange uppercase tracking-widest truncate">{{ photo.user.name }}</span>
+                                    <span v-if="photo.user" class="text-[8px] font-black text-brand-orange uppercase tracking-widest truncate flex items-center gap-1">
+                                        {{ photo.user.name }}
+                                        <svg v-if="photo.user.is_verified" class="w-2.5 h-2.5 text-blue-500 fill-current" viewBox="0 0 24 24">
+                                            <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
                                 </div>
                                 <p class="text-sm font-black text-brand-dark uppercase tracking-tighter truncate">Registro #{{ photo.id }}</p>
                                 <p class="text-lg font-black text-brand-blue mt-1 leading-none">R$ {{ Number(photo.price).toFixed(2) }}</p>
@@ -357,7 +427,12 @@ const portfolioUrl = (user) => {
 
                             <div v-if="currentPhoto.user" class="pr-6 pl-4 border-l border-white/10 hidden md:block">
                                 <p class="text-[8px] text-white/40 uppercase font-black tracking-widest mb-1">Fotógrafo</p>
-                                <a :href="portfolioUrl(currentPhoto.user)" target="_blank" class="text-white text-xs font-bold hover:text-brand-orange transition">{{ currentPhoto.user.name }}</a>
+                                <a :href="portfolioUrl(currentPhoto.user)" target="_blank" class="text-white text-xs font-bold hover:text-brand-orange transition flex items-center gap-1.5">
+                                    {{ currentPhoto.user.name }}
+                                    <svg v-if="currentPhoto.user.is_verified" class="w-3.5 h-3.5 text-blue-500 fill-current" viewBox="0 0 24 24">
+                                        <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
                             </div>
                         </div>
                     </div>
