@@ -121,13 +121,32 @@ class WithdrawalController extends Controller
                     'efi_e2e_id' => $statusResponse['e2eId'] ?? $withdrawal->efi_e2e_id
                 ]);
 
-                return back()->with('success', 'Status atualizado: ' . $statusResponse['status']);
+                return back()->with('success', 'Status atualizado via Efí: ' . $statusResponse['status']);
             }
 
-            return back()->with('error', 'Não foi possível obter o status atualizado da Efí.');
+            // Log de falha na consulta para debug futuro
+            \Illuminate\Support\Facades\Log::warning('Consulta automática Efí falhou', [
+                'withdrawal_id' => $withdrawal->id,
+                'efi_payout_id' => $withdrawal->efi_payout_id,
+                'response' => $statusResponse
+            ]);
+
+            return back()->with('warning', 'A Efí ainda não processou ou não encontrou este registro (Comum em Sandbox). Você pode aguardar ou marcar como pago manualmente.');
 
         } catch (\Exception $e) {
             return back()->withErrors(['message' => 'Erro ao consultar status: ' . $e->getMessage()]);
         }
+    }
+
+    public function markAsPaid(Withdrawal $withdrawal)
+    {
+        if (!auth()->user()->is_superadmin) abort(403);
+
+        $withdrawal->update([
+            'status' => 'paid',
+            'paid_at' => now()
+        ]);
+
+        return back()->with('success', 'Saque marcado como PAGO manualmente.');
     }
 }

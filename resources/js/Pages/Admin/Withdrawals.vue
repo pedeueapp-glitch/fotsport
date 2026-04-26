@@ -11,7 +11,16 @@ const props = defineProps({
 
 const payForm = useForm({});
 
-const checkForm = useForm({});
+const markAsPaidForm = useForm({});
+
+const markAsPaid = async (id) => {
+    const result = await confirm('Aprovação Manual', 'Deseja marcar este saque como PAGO manualmente? Use apenas se tiver certeza que o dinheiro foi enviado.');
+    if (result.isConfirmed) {
+        markAsPaidForm.post(route('admin.withdrawals.mark-as-paid', id), {
+            preserveScroll: true
+        });
+    }
+};
 
 const checkStatus = (id) => {
     checkForm.post(route('admin.withdrawals.check', id), {
@@ -78,13 +87,19 @@ const authorizePayment = async (id) => {
                                     </button>
                                 </template>
                                 <template v-else-if="withdrawal.status === 'processing'">
-                                    <div class="flex items-center justify-end gap-2">
-                                        <span class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-blue-100 animate-pulse">
-                                            Processando...
-                                        </span>
-                                        <button @click="checkStatus(withdrawal.id)" :disabled="checkForm.processing" class="p-2 text-blue-400 hover:text-blue-600 transition-colors disabled:opacity-50">
-                                            <svg class="w-4 h-4" :class="checkForm.processing ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    <div class="flex items-center justify-end gap-3">
+                                        <button @click="markAsPaid(withdrawal.id)" 
+                                                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-500 font-black text-[8px] uppercase tracking-widest rounded-lg transition-all active:scale-95 border border-gray-200">
+                                            Aprovar Manual
                                         </button>
+                                        <div class="flex items-center gap-1">
+                                            <span class="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-[9px] font-black uppercase tracking-widest border border-blue-100 animate-pulse">
+                                                Processando...
+                                            </span>
+                                            <button @click="checkStatus(withdrawal.id)" :disabled="checkForm.processing" class="p-2 text-blue-400 hover:text-blue-600 transition-colors disabled:opacity-50">
+                                                <svg class="w-4 h-4" :class="checkForm.processing ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </template>
                                 <template v-else-if="withdrawal.status === 'paid'">
