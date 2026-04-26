@@ -128,15 +128,35 @@ class EfiService
                 'idEnvio' => (string) $idEnvio
             ];
 
-            // Criando o corpo EXATAMENTE como a API exige, sem campos extras
+            // Formatação da chave baseada no tipo
+            $formattedKey = $pixKey;
+            if ($pixKeyType === 'phone') {
+                // Remove tudo que não é número
+                $cleanPhone = preg_replace('/[^0-9]/', '', $pixKey);
+                // Se não começar com 55, adiciona
+                if (strlen($cleanPhone) <= 11) {
+                    $formattedKey = '+55' . $cleanPhone;
+                } else {
+                    $formattedKey = '+' . $cleanPhone;
+                }
+            } elseif ($pixKeyType === 'cpf' || $pixKeyType === 'cnpj') {
+                $formattedKey = preg_replace('/[^0-9]/', '', $pixKey);
+            }
+
+            // Criando o corpo EXATAMENTE como a API exige
             $body = [
                 'valor' => number_format($amount, 2, '.', ''),
-                'chave' => $pixKey
+                'chave' => $formattedKey
             ];
 
-            Log::info('Enviando Pix Efí (Chamada Direta)', ['idEnvio' => $idEnvio, 'body' => $body]);
+            Log::info('Enviando Pix Efí (Com Chave Formatada)', [
+                'idEnvio' => $idEnvio, 
+                'tipo' => $pixKeyType,
+                'chave_original' => $pixKey,
+                'chave_formatada' => $formattedKey,
+                'body' => $body
+            ]);
 
-            // Usando o método custom da Efí para ter controle total do JSON
             $response = $this->efi->pixSend($params, $body);
             return $response;
         } catch (\Exception $e) {
