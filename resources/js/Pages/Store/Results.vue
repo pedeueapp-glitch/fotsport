@@ -104,7 +104,7 @@ const portfolioUrl = (user) => {
             @close="() => { showCheckoutModal = false; checkoutData = null; }"
         />
 
-        <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full mb-32">
+        <main class="flex-grow w-full py-20 px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
             
             <header class="mb-20">
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 text-center md:text-left">
@@ -125,7 +125,6 @@ const portfolioUrl = (user) => {
                         Fazer Nova Busca
                     </Link>
                 </div>
-                <div class="mt-10 h-1.5 w-20 bg-brand-blue rounded-full"></div>
             </header>
             
             <!-- Estado Vazio -->
@@ -142,56 +141,39 @@ const portfolioUrl = (user) => {
                 </Link>
             </div>
 
-            <!-- Grid de Fotos (Estilo Dashboard) -->
-            <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <div v-for="(photo, index) in photos" :key="photo.id" 
-                     class="group bg-white rounded-[2.5rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 border border-gray-100 flex flex-col">
-                    
-                    <div class="aspect-square overflow-hidden relative cursor-pointer" @click="openLightbox(index)">
-                        <img :src="'/' + photo.watermarked_path" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
+            <!-- Grid de Fotos (Estilo Imersivo) -->
+            <div v-else class="lg:-mx-8 sm:-mx-6 -mx-4">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-0 border-t border-l border-gray-100">
+                    <div v-for="(photo, index) in photos" :key="photo.id" 
+                         class="group relative aspect-square overflow-hidden border-r border-b border-gray-100 bg-gray-50">
                         
-                        <div class="absolute inset-0 bg-brand-dark/40 transition-opacity flex items-center justify-center backdrop-blur-sm"
-                             :class="selectedPhotos.includes(photo.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'">
-                            <div class="w-16 h-16 rounded-2xl flex items-center justify-center shadow-2xl transform transition-transform duration-500"
-                                 :class="selectedPhotos.includes(photo.id) ? 'bg-green-500 text-white scale-100' : 'bg-white text-brand-dark scale-50 group-hover:scale-100'">
-                                <svg v-if="selectedPhotos.includes(photo.id)" class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                <svg v-else class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" /></svg>
+                        <img :src="'/' + photo.watermarked_path" 
+                             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                        
+                        <!-- Overlay de Seleção/Info (Clique aqui abre o Lightbox) -->
+                        <div @click.self="openLightbox(index)"
+                             class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-4 cursor-zoom-in">
+                            
+                            <div class="flex justify-between items-start pointer-events-none">
+                                <span class="bg-black/50 backdrop-blur-md text-[8px] text-white px-2 py-1 rounded font-black uppercase">#{{ photo.id }}</span>
+                                <div @click.stop="togglePhoto(photo.id)" 
+                                     class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all pointer-events-auto shadow-lg"
+                                     :class="selectedPhotos.includes(photo.id) ? 'bg-green-500 text-white scale-110' : 'bg-white/20 text-white hover:bg-white hover:text-brand-dark'">
+                                    <svg v-if="selectedPhotos.includes(photo.id)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
+                                </div>
+                            </div>
+
+                            <div @click.self="openLightbox(index)" class="flex justify-between items-end pointer-events-none">
+                                <p class="text-white font-black text-sm drop-shadow-lg">R$ {{ Number(photo.price).toFixed(2) }}</p>
+                                <button class="text-[8px] text-white/70 hover:text-white uppercase font-black tracking-widest transition-colors">Ampliar</button>
                             </div>
                         </div>
 
-                        <div v-if="selectedPhotos.includes(photo.id)" class="absolute top-6 right-6">
-                            <span class="bg-green-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl">
-                                Selecionado
-                            </span>
-                        </div>
-                    </div>
-
-                    <div class="p-8 flex-grow flex flex-col">
-                        <div class="mb-8">
-                            <div class="flex items-center gap-2 mb-2">
-                                <div class="h-1 w-4 bg-brand-orange rounded-full"></div>
-                                <span class="text-[10px] font-black text-brand-orange uppercase tracking-widest">{{ photo.event ? photo.event.name : 'Evento' }}</span>
-                            </div>
-                            <div v-if="photo.user" class="flex items-center gap-1.5 mb-2">
-                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ photo.user.name }}</span>
-                                <svg v-if="photo.user.is_verified" class="w-3 h-3 text-blue-500 fill-current" viewBox="0 0 24 24">
-                                    <path fill-rule="evenodd" d="M8.603 3.799A4.49 4.49 0 0 1 12 2.25c1.357 0 2.573.6 3.397 1.549a4.49 4.49 0 0 1 3.498 1.307 4.491 4.491 0 0 1 1.307 3.497A4.49 4.49 0 0 1 21.75 12a4.49 4.49 0 0 1-1.549 3.397 4.491 4.491 0 0 1-1.307 3.497 4.491 4.491 0 0 1-3.497 1.307A4.49 4.49 0 0 1 12 21.75a4.49 4.49 0 0 1-3.397-1.549 4.49 4.49 0 0 1-3.498-1.306 4.491 4.491 0 0 1-1.307-3.498A4.49 4.49 0 0 1 2.25 12c0-1.357.6-2.573 1.549-3.397a4.49 4.49 0 0 1 1.307-3.497 4.49 4.49 0 0 1 3.497-1.307Zm7.007 6.387a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd" />
-                                </svg>
-                            </div>
-                            <h3 class="text-xl font-black text-brand-dark uppercase tracking-tighter line-clamp-1">Registro #{{ photo.id }}</h3>
-                            <p class="text-2xl font-black text-brand-blue mt-2">R$ {{ Number(photo.price).toFixed(2) }}</p>
-                        </div>
-
-                        <div class="mt-auto">
-                            <button @click="togglePhoto(photo.id)"
-                                    class="w-full flex items-center justify-center gap-3 px-6 py-4 text-[11px] font-black uppercase tracking-[.15em] rounded-2xl transition-all shadow-xl active:scale-95"
-                                    :class="selectedPhotos.includes(photo.id) 
-                                        ? 'bg-gray-100 text-gray-400 border-2 border-transparent' 
-                                        : 'bg-brand-dark text-white hover:bg-black shadow-brand-dark/10'">
-                                <svg v-if="selectedPhotos.includes(photo.id)" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" /></svg>
-                                <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" /></svg>
-                                {{ selectedPhotos.includes(photo.id) ? 'Remover' : 'Selecionar' }}
-                            </button>
+                        <!-- Indicador de Selecionada (Sempre visível se selecionada) -->
+                        <div v-if="selectedPhotos.includes(photo.id)" 
+                             class="absolute top-0 right-0 w-8 h-8 bg-green-500 text-white flex items-center justify-center shadow-lg pointer-events-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                         </div>
                     </div>
                 </div>
@@ -200,7 +182,7 @@ const portfolioUrl = (user) => {
 
         <Footer />
         
-        <!-- Barra de Checkout Flutuante -->
+        <!-- Barra de Checkout Flutuante (Sincronizada com Eventos) -->
         <Transition
             enter-active-class="translate-y-full transition-transform duration-500"
             enter-to-class="translate-y-0"
@@ -220,15 +202,28 @@ const portfolioUrl = (user) => {
                             </div>
                         </div>
                         <div>
-                            <p class="text-white font-black text-xl uppercase tracking-tighter">Fotos Encontradas</p>
+                            <p class="text-white font-black text-xl uppercase tracking-tighter">Fotos Selecionadas</p>
                             <button @click="selectedPhotos = []" class="text-[10px] text-white/40 hover:text-white uppercase font-black tracking-widest transition">Limpar Tudo</button>
                         </div>
                     </div>
 
                     <div class="flex items-center gap-10">
                         <div class="text-center md:text-right">
-                            <p class="text-[10px] text-brand-orange uppercase font-black tracking-[.3em]">Total</p>
-                            <p class="text-white font-black text-3xl">R$ {{ totalAmount.toFixed(2) }}</p>
+                            <template v-if="selectedPhotos.length >= 2">
+                                <p class="text-[10px] text-green-400 uppercase font-black tracking-[.3em] mb-1">
+                                    Economia de {{ selectedPhotos.length >= 10 ? '20%' : (selectedPhotos.length >= 5 ? '10%' : '5%') }}
+                                </p>
+                                <div class="flex items-center gap-3 justify-center md:justify-end">
+                                    <span class="text-white/30 line-through text-sm font-bold">R$ {{ photos.filter(p => selectedPhotos.includes(p.id)).reduce((acc, p) => acc + Number(p.price), 0).toFixed(2) }}</span>
+                                    <p class="text-white font-black text-3xl">
+                                        R$ {{ (photos.filter(p => selectedPhotos.includes(p.id)).reduce((acc, p) => acc + Number(p.price), 0) * (selectedPhotos.length >= 10 ? 0.8 : (selectedPhotos.length >= 5 ? 0.9 : 0.95))).toFixed(2) }}
+                                    </p>
+                                </div>
+                            </template>
+                            <template v-else>
+                                <p class="text-[10px] text-brand-orange uppercase font-black tracking-[.3em]">Total</p>
+                                <p class="text-white font-black text-3xl">R$ {{ photos.filter(p => selectedPhotos.includes(p.id)).reduce((acc, p) => acc + Number(p.price), 0).toFixed(2) }}</p>
+                            </template>
                         </div>
                         <button @click="checkout" :disabled="form.processing"
                                 class="bg-brand-blue hover:bg-brand-blue-hover text-white px-10 py-5 rounded-3xl font-black text-[11px] uppercase tracking-[.2em] shadow-2xl transition-all active:scale-95 border-none disabled:opacity-50">
