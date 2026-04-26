@@ -208,62 +208,55 @@ const portfolioUrl = (user) => {
                 </div>
             </header>
 
-            <!-- Sessão de Busca Facial Elegante (Glassmorphism) -->
-            <section class="max-w-4xl mx-auto mb-32 relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-brand-orange/20 via-brand-blue/20 to-brand-orange/20 blur-[100px] opacity-30"></div>
+            <!-- Sessão de Busca Facial Compacta -->
+            <section class="max-w-4xl mx-auto mb-16 relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-brand-orange/10 via-brand-blue/10 to-brand-orange/10 blur-[80px] opacity-20"></div>
                 
-                <div class="relative bg-white/40 backdrop-blur-3xl border border-white/50 rounded-[3rem] p-10 md:p-16 shadow-[0_30px_100px_rgba(0,0,0,0.05)] overflow-hidden group">
-                    <div class="absolute top-0 right-0 w-64 h-64 bg-brand-orange/5 rounded-full blur-3xl -mr-32 -mt-32 transition-all group-hover:bg-brand-orange/10"></div>
-                    
-                    <div class="flex flex-col lg:flex-row items-center gap-12 relative z-10">
+                <div class="relative bg-white/60 backdrop-blur-2xl border border-white/50 rounded-[2.5rem] p-6 md:p-10 shadow-[0_20px_60px_rgba(0,0,0,0.03)] overflow-hidden group">
+                    <div class="flex flex-col lg:flex-row items-center gap-8 relative z-10">
                         <div class="lg:w-1/2 text-center lg:text-left">
-                            <h2 class="text-3xl md:text-4xl font-black text-brand-dark uppercase tracking-tighter mb-6">
-                                Encontre suas fotos <br/> <span class="text-brand-orange">num piscar de olhos</span>
+                            <h2 class="text-2xl md:text-3xl font-black text-brand-dark uppercase tracking-tighter mb-4">
+                                Busque sua <span class="text-brand-orange">Selfie</span>
                             </h2>
-                            <p class="text-gray-500 font-medium leading-relaxed mb-8">
-                                Nossa inteligência artificial analisa milhares de registros para encontrar você. Basta enviar uma selfie clara.
+                            <p class="text-gray-500 font-medium text-[11px] leading-relaxed mb-6">
+                                Nossa IA encontra você em segundos. Envie uma foto clara do seu rosto.
                             </p>
-                            <div class="flex items-center gap-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                                <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Rápido</span>
-                                <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Seguro</span>
-                                <span class="flex items-center gap-2"><div class="w-1.5 h-1.5 bg-green-500 rounded-full"></div> Preciso</span>
+                            
+                            <!-- Banner de Descontos Progressivos -->
+                            <div class="grid grid-cols-3 gap-2">
+                                <div class="bg-brand-orange/5 border border-brand-orange/10 rounded-xl p-3 text-center">
+                                    <p class="text-[7px] font-black text-brand-orange uppercase tracking-widest mb-1">2+ Fotos</p>
+                                    <p class="text-xs font-black text-brand-dark">-5%</p>
+                                </div>
+                                <div class="bg-brand-blue/5 border border-brand-blue/10 rounded-xl p-3 text-center">
+                                    <p class="text-[7px] font-black text-brand-blue uppercase tracking-widest mb-1">5+ Fotos</p>
+                                    <p class="text-xs font-black text-brand-dark">-10%</p>
+                                </div>
+                                <div class="bg-green-500/5 border border-green-500/10 rounded-xl p-3 text-center">
+                                    <p class="text-[7px] font-black text-green-600 uppercase tracking-widest mb-1">10+ Fotos</p>
+                                    <p class="text-xs font-black text-brand-dark">-20%</p>
+                                </div>
                             </div>
                         </div>
 
                         <div class="lg:w-1/2 w-full">
-                            <form @submit.prevent="searchFaces" class="bg-white rounded-[2rem] p-8 shadow-2xl shadow-brand-dark/5 border border-gray-100">
-                                <label class="block mb-6">
-                                    <div class="w-full h-32 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-brand-orange hover:bg-brand-orange/[0.02] transition-all cursor-pointer group/upload relative overflow-hidden">
+                            <form @submit.prevent="searchFaces" class="bg-white rounded-[1.5rem] p-5 shadow-xl shadow-brand-dark/5 border border-gray-50">
+                                <label class="block mb-4">
+                                    <div class="w-full h-24 border-2 border-dashed border-gray-100 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-brand-orange hover:bg-brand-orange/[0.01] transition-all cursor-pointer group/upload relative overflow-hidden">
                                         <div v-if="!searchForm.selfie" class="text-center">
-                                            <svg class="w-8 h-8 text-gray-300 mx-auto group-hover/upload:text-brand-orange group-hover/upload:scale-110 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mt-2 group-hover/upload:text-brand-dark transition-colors">Arraste ou clique para enviar sua Selfie</p>
+                                            <svg class="w-6 h-6 text-gray-200 mx-auto group-hover/upload:text-brand-orange transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                            <p class="text-[8px] font-black text-gray-300 uppercase tracking-widest mt-1">Clique para enviar Selfie</p>
                                         </div>
-                                        <div v-else class="flex items-center gap-4 p-4 w-full">
-                                            <div class="w-20 h-20 bg-gray-100 rounded-xl overflow-hidden shadow-inner">
-                                                <div class="w-full h-full flex items-center justify-center text-brand-orange font-black text-lg">✓</div>
-                                            </div>
-                                            <div class="text-left">
-                                                <p class="text-xs font-black text-brand-dark uppercase truncate max-w-[150px]">{{ searchForm.selfie.name }}</p>
-                                                <p class="text-[10px] font-bold text-green-500 uppercase tracking-widest mt-1">Arquivo Pronto</p>
-                                            </div>
+                                        <div v-else class="flex items-center gap-3 p-3 w-full">
+                                            <div class="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center text-green-500 font-black text-sm">✓</div>
+                                            <p class="text-[9px] font-black text-brand-dark uppercase truncate flex-grow">{{ searchForm.selfie.name }}</p>
                                         </div>
                                         <input type="file" @change="handleFileUpload" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" />
                                     </div>
                                 </label>
                                 
-                                <PrimaryButton :disabled="searchForm.processing || !searchForm.selfie || isResizing" class="w-full justify-center h-16 rounded-2xl text-[11px] font-black uppercase tracking-[.3em] bg-brand-dark hover:bg-black shadow-2xl shadow-brand-dark/20 transition-all">
-                                    <span v-if="isResizing" class="flex items-center gap-3">
-                                        <div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                        Otimizando Imagem...
-                                    </span>
-                                    <span v-else-if="searchForm.processing" class="flex items-center gap-3">
-                                        <div class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                                        Analisando Características...
-                                    </span>
-                                    <span v-else class="flex items-center gap-3">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                                        Iniciar Reconhecimento Facial
-                                    </span>
+                                <PrimaryButton :disabled="searchForm.processing || !searchForm.selfie || isResizing" class="w-full justify-center h-12 rounded-xl text-[9px] font-black uppercase tracking-[.2em] bg-brand-dark shadow-lg">
+                                    {{ isResizing ? 'Otimizando...' : (searchForm.processing ? 'Buscando...' : 'Buscar Fotos') }}
                                 </PrimaryButton>
                             </form>
                         </div>
@@ -314,29 +307,31 @@ const portfolioUrl = (user) => {
                         <!-- Estado: Foto Pronta -->
                         <template v-else>
                             <img :src="'/' + photo.watermarked_path" 
-                                 @click="openLightbox(index)"
-                                 class="w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-110" />
+                                 class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             
-                            <!-- Overlay de Seleção/Info -->
-                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-4 pointer-events-none">
-                                <div class="flex justify-between items-start pointer-events-auto">
+                            <!-- Overlay de Seleção/Info (Clique aqui abre o Lightbox) -->
+                            <div @click.self="openLightbox(index)"
+                                 class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-4 cursor-zoom-in">
+                                
+                                <div class="flex justify-between items-start pointer-events-none">
                                     <span class="bg-black/50 backdrop-blur-md text-[8px] text-white px-2 py-1 rounded font-black uppercase">#{{ photo.id }}</span>
-                                    <div @click="togglePhoto(photo.id)" 
-                                         class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all"
+                                    <div @click.stop="togglePhoto(photo.id)" 
+                                         class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all pointer-events-auto shadow-lg"
                                          :class="selectedPhotos.includes(photo.id) ? 'bg-green-500 text-white scale-110' : 'bg-white/20 text-white hover:bg-white hover:text-brand-dark'">
                                         <svg v-if="selectedPhotos.includes(photo.id)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                         <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                     </div>
                                 </div>
-                                <div class="pointer-events-auto flex justify-between items-end">
-                                    <p class="text-white font-black text-sm">R$ {{ Number(photo.price).toFixed(2) }}</p>
-                                    <button @click="openLightbox(index)" class="text-[8px] text-white/70 hover:text-white uppercase font-black tracking-widest">Ampliar</button>
+
+                                <div @click.self="openLightbox(index)" class="flex justify-between items-end pointer-events-none">
+                                    <p class="text-white font-black text-sm drop-shadow-lg">R$ {{ Number(photo.price).toFixed(2) }}</p>
+                                    <button class="text-[8px] text-white/70 hover:text-white uppercase font-black tracking-widest transition-colors">Ampliar</button>
                                 </div>
                             </div>
 
                             <!-- Indicador de Selecionada (Sempre visível se selecionada) -->
                             <div v-if="selectedPhotos.includes(photo.id)" 
-                                 class="absolute top-0 right-0 w-8 h-8 bg-green-500 text-white flex items-center justify-center shadow-lg">
+                                 class="absolute top-0 right-0 w-8 h-8 bg-green-500 text-white flex items-center justify-center shadow-lg pointer-events-none">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                             </div>
                         </template>
