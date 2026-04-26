@@ -4,6 +4,7 @@ import PrimaryButton from '@/Components/PrimaryButton.vue';
 import Footer from '@/Components/Footer.vue';
 import Navbar from '@/Components/Navbar.vue';
 import CheckoutModal from '@/Components/CheckoutModal.vue';
+import FlashMessages from '@/Components/FlashMessages.vue';
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 
 const props = defineProps({
@@ -90,6 +91,7 @@ const portfolioUrl = (user) => {
 
     <div class="min-h-screen bg-white flex flex-col font-sans text-brand-dark">
         <Navbar />
+        <FlashMessages />
 
         <CheckoutModal
             v-if="checkoutData"

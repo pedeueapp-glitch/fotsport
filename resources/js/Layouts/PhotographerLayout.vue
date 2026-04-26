@@ -3,6 +3,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import Navbar from '@/Components/Navbar.vue';
 import Footer from '@/Components/Footer.vue';
+import FlashMessages from '@/Components/FlashMessages.vue';
 
 const props = defineProps({
     title: String,
@@ -21,6 +22,7 @@ const menuItems = [
 <template>
     <div class="min-h-screen bg-gray-50 flex flex-col font-sans text-brand-dark">
         <Navbar />
+        <FlashMessages />
 
         <div class="flex-grow flex max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 gap-8">
             <!-- Sidebar -->
