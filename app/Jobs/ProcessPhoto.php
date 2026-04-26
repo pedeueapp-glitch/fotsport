@@ -64,7 +64,7 @@ class ProcessPhoto implements ShouldQueue
             // --- 2. CRIAR VERSÃO COM MARCA D'ÁGUA (Low Res) ---
             $image = Image::make($tempFullPath);
             
-            $image->resize(1200, 1200, function ($constraint) {
+            $image->resize(600, 600, function ($constraint) {
                 $constraint->aspectRatio();
                 $constraint->upsize();
             });
@@ -122,7 +122,7 @@ class ProcessPhoto implements ShouldQueue
             Storage::disk('public')->makeDirectory($watermarkDir);
             $watermarkPath = $watermarkDir . '/' . $this->filename;
             
-            Storage::disk('public')->put($watermarkPath, (string) $image->encode('jpg', 60));
+            Storage::disk('public')->put($watermarkPath, (string) $image->encode('jpg', 30));
 
             // 3. Atualizar o Modelo
             $this->photo->update([
