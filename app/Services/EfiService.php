@@ -84,6 +84,12 @@ class EfiService
             }
 
             return null;
+        } catch (\Exception $e) {
+            Log::error('Erro Efi Pay: ' . $e->getMessage());
+            return null;
+        }
+    }
+
     public function getPixStatus($txid)
     {
         try {
