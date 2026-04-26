@@ -41,6 +41,7 @@ class WithdrawalController extends Controller
                 $withdrawal->net_amount,
                 $withdrawal->pix_key ?? $withdrawal->user->pix_key,
                 $withdrawal->pix_key_type ?? $withdrawal->user->pix_key_type,
+                $withdrawal->id, // Passando o ID do saque como idEnvio
                 "Saque Fotsport #{$withdrawal->id}"
             );
 
