@@ -45,15 +45,18 @@ class WithdrawalController extends Controller
                 "Saque Fotsport #{$withdrawal->id}"
             );
 
-            if ($pixResponse && isset($pixResponse['endToEndId'])) {
-                $withdrawal->status = 'approved';
-                $withdrawal->efi_payout_id = $pixResponse['endToEndId'];
-                $withdrawal->save();
+            if ($pixResponse && isset($pixResponse['status']) && ($pixResponse['status'] === 'EM_PROCESSAMENTO' || $pixResponse['status'] === 'REALIZADO')) {
+                $withdrawal->update([
+                    'status' => 'paid',
+                    'paid_at' => now(),
+                    'efi_payout_id' => $pixResponse['e2eId'] ?? ($pixResponse['idEnvio'] ?? null)
+                ]);
 
-                return back()->with('success', 'Transferência PIX enviada e aprovada com sucesso via Efí Pay!');
-            } else {
-                return back()->withErrors(['message' => 'A Efí recusou a transferência ou saldo insuficiente.']);
+                return back()->with('success', 'Saque aprovado e Pix enviado com sucesso!');
             }
+
+            Log::error('Falha no Payout Efí', ['response' => $pixResponse]);
+            return back()->with('error', 'O saque foi processado, mas a Efí retornou um status inesperado. Verifique os logs.');
 
         } catch (\Exception $e) {
             return back()->withErrors(['message' => 'Erro crítico ao conectar na Efí: ' . $e->getMessage()]);
