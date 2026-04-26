@@ -141,16 +141,16 @@ class EfiService
             $body = [
                 'valor' => number_format($amount, 2, '.', ''),
                 'pagador' => [
-                    'chave' => env('EFI_PIX_KEY') // Sua chave cadastrada no .env
+                    'chave' => config('services.efi.pix_key') 
                 ],
                 'favorecido' => [
                     'chave' => $formattedKey
                 ]
             ];
 
-            $certBase64 = env('EFI_CERTIFICATE_BASE64');
-            $certPath = storage_path('app/efi_cert.p12'); // Voltamos para p12
-            if (!file_exists($certPath)) {
+            $certBase64 = config('services.efi.certificate_base64');
+            $certPath = storage_path('app/efi_cert.p12');
+            if (!file_exists($certPath) || empty(file_get_contents($certPath))) {
                 file_put_contents($certPath, base64_decode($certBase64));
             }
 
@@ -169,7 +169,16 @@ class EfiService
                     ]
                 ])->post($tokenUrl, ['grant_type' => 'client_credentials']);
 
-            $accessToken = $tokenResponse->json()['access_token'];
+            if ($tokenResponse->failed()) {
+                Log::error('Efí Payout - Falha ao obter Token', ['response' => $tokenResponse->json()]);
+                return $tokenResponse->json();
+            }
+
+            $accessToken = $tokenResponse->json()['access_token'] ?? null;
+            if (!$accessToken) {
+                Log::error('Efí Payout - Token não encontrado na resposta');
+                return ['mensagem' => 'Falha na autenticação com a Efí.'];
+            }
 
             // 5. Chamada de Envio via PUT (Endpoint /v2/gn/pix/)
             $baseUrl = config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br' : 'https://api-pix.gerencianet.com.br';

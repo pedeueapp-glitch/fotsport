@@ -55,10 +55,26 @@ class WithdrawalController extends Controller
                 return back()->with('success', 'Saque aprovado e Pix enviado com sucesso!');
             }
 
-            Log::error('Falha no Payout Efí', ['response' => $pixResponse]);
-            return back()->with('error', 'O saque foi processado, mas a Efí retornou um status inesperado. Verifique os logs.');
+            // Se chegou aqui, deu erro. Vamos logar o motivo real.
+            \Illuminate\Support\Facades\Log::error('Falha no Payout Efí - Resposta Detalhada', [
+                'withdrawal_id' => $withdrawal->id,
+                'response' => $pixResponse
+            ]);
+
+            $errorMessage = 'O Pix não foi concluído.';
+            if (isset($pixResponse['nome'])) {
+                $errorMessage .= ' Erro: ' . $pixResponse['nome'];
+            } elseif (isset($pixResponse['mensagem'])) {
+                $errorMessage .= ' Detalhe: ' . $pixResponse['mensagem'];
+            }
+
+            return back()->with('error', $errorMessage);
 
         } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Erro crítico no Payout Efí (Exception)', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return back()->withErrors(['message' => 'Erro crítico ao conectar na Efí: ' . $e->getMessage()]);
         }
     }
