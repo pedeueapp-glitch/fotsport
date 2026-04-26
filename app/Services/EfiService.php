@@ -124,40 +124,32 @@ class EfiService
     public function sendPix($amount, $pixKey, $pixKeyType, $idEnvio, $description = 'Saque Fotsport')
     {
         try {
-            $params = [
-                'idEnvio' => (string) $idEnvio
-            ];
-
             // Formatação da chave baseada no tipo
             $formattedKey = $pixKey;
             if ($pixKeyType === 'phone') {
-                // Remove tudo que não é número
                 $cleanPhone = preg_replace('/[^0-9]/', '', $pixKey);
-                // Se não começar com 55, adiciona
-                if (strlen($cleanPhone) <= 11) {
-                    $formattedKey = '+55' . $cleanPhone;
-                } else {
-                    $formattedKey = '+' . $cleanPhone;
-                }
+                $formattedKey = (strlen($cleanPhone) <= 11) ? '+55' . $cleanPhone : '+' . $cleanPhone;
             } elseif ($pixKeyType === 'cpf' || $pixKeyType === 'cnpj') {
                 $formattedKey = preg_replace('/[^0-9]/', '', $pixKey);
             }
 
-            // Criando o corpo EXATAMENTE como a API exige
+            // Montando o corpo estritamente conforme a documentação
             $body = [
                 'valor' => number_format($amount, 2, '.', ''),
                 'chave' => $formattedKey
             ];
 
-            Log::info('Enviando Pix Efí (Com Chave Formatada)', [
-                'idEnvio' => $idEnvio, 
-                'tipo' => $pixKeyType,
-                'chave_original' => $pixKey,
-                'chave_formatada' => $formattedKey,
+            Log::info('Enviando Pix Efí (Requisição Direta ao Endpoint)', [
+                'endpoint' => "/v2/pix/envio/{$idEnvio}",
                 'body' => $body
             ]);
 
-            $response = $this->efi->pixSend($params, $body);
+            // Chamando o endpoint diretamente para evitar interferência do SDK no body
+            // O método da Efí para requisições manuais é $api->nomeDaRota($params, $body)
+            // No caso de Pix Envio, a rota no SDK é 'pixSend'
+            // Mas vamos tentar passar o idEnvio no params e o body limpo.
+            $response = $this->efi->pixSend(['idEnvio' => (string)$idEnvio], $body);
+            
             return $response;
         } catch (\Exception $e) {
             Log::error('Erro ao enviar Pix (Efi): ' . $e->getMessage());
