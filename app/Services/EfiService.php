@@ -11,11 +11,42 @@ class EfiService
 
     public function __construct()
     {
+        $certificate = config('services.efi.certificate');
+        $certificateBase64 = config('services.efi.certificate_base64');
+
+        if ($certificateBase64) {
+            $certificatePath = storage_path('app/efi_certificate.pem');
+            $decoded = base64_decode($certificateBase64);
+
+            // Verifica se o certificado já está em formato PEM
+            if (strpos($decoded, '-----BEGIN') === false) {
+                // Se for binário (P12), tenta converter para PEM
+                if (openssl_pkcs12_read($decoded, $certs, '')) {
+                    $pemContent = $certs['cert'] . "\n" . $certs['pkey'];
+                    if (isset($certs['extracerts']) && count($certs['extracerts']) > 0) {
+                        foreach ($certs['extracerts'] as $extra) {
+                            $pemContent .= "\n" . $extra;
+                        }
+                    }
+                    file_put_contents($certificatePath, $pemContent);
+                } else {
+                    // Se não conseguir ler como P12, salva o binário (pode causar erro no cURL)
+                    file_put_contents($certificatePath, $decoded);
+                    Log::warning('EfiService: Base64 não é PEM e falhou na conversão P12. Verifique se há senha no certificado.');
+                }
+            } else {
+                // Já é PEM, apenas salva
+                file_put_contents($certificatePath, $decoded);
+            }
+        } else {
+            $certificatePath = base_path($certificate);
+        }
+
         $options = [
             'client_id' => config('services.efi.client_id'),
             'client_secret' => config('services.efi.client_secret'),
-            'sandbox' => config('services.efi.sandbox'),
-            'certificate' => base_path(config('services.efi.certificate')),
+            'sandbox' => (bool) config('services.efi.sandbox'),
+            'certificate' => $certificatePath,
         ];
 
         $this->efi = new EfiPay($options);

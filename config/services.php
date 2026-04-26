@@ -36,6 +36,7 @@ return [
         'client_id' => env('EFI_CLIENT_ID'),
         'client_secret' => env('EFI_CLIENT_SECRET'),
         'certificate' => env('EFI_CERTIFICATE'),
+        'certificate_base64' => env('EFI_CERTIFICATE_BASE64'),
         'pix_key' => env('EFI_PIX_KEY'),
     ],
 
