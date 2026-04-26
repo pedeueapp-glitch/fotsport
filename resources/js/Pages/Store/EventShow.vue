@@ -277,14 +277,14 @@ const portfolioUrl = (user) => {
             </div>
 
             <div v-else>
-                <div class="flex items-end justify-between mb-12 px-2">
+                <div class="flex items-end justify-between mb-8 px-4 md:px-0">
                     <div>
-                        <h3 class="text-2xl font-black text-brand-dark uppercase tracking-tighter">Galeria Completa</h3>
+                        <h3 class="text-2xl font-black text-brand-dark uppercase tracking-tighter">Galeria do Evento</h3>
                         <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">Exibindo {{ photoList.length }} de {{ photos.total }} fotos</p>
                     </div>
 
                     <!-- Paginação Superior Minimalista -->
-                    <div class="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-2xl border border-gray-100">
+                    <div class="flex items-center gap-1.5 bg-gray-50 p-1.5 rounded-2xl border border-gray-100 hidden md:flex">
                         <Link v-for="link in photos.links" :key="link.label"
                               :href="link.url ?? '#'"
                               v-html="link.label.toLowerCase().includes('prev') ? '←' : (link.label.toLowerCase().includes('next') ? '→' : link.label)"
@@ -298,47 +298,49 @@ const portfolioUrl = (user) => {
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 sm:gap-4">
+                <!-- Galeria Full Width -->
+                <div class="lg:-mx-8 sm:-mx-6 -mx-4">
+                    <div class="grid grid-cols-2 md:grid-cols-5 gap-0 border-t border-l border-gray-200">
                     <div v-for="(photo, index) in photoList" :key="photo.id" 
-                         class="group bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500 border border-gray-100 flex flex-col relative">
+                         class="group relative aspect-square overflow-hidden border-r border-b border-gray-200 bg-gray-100">
                         
                         <!-- Estado: Em Processamento -->
                         <div v-if="photo.watermarked_path === 'processing.jpg'" 
-                             class="aspect-square bg-gray-50 flex flex-col items-center justify-center p-4 text-center">
+                             class="absolute inset-0 flex flex-col items-center justify-center p-4 text-center">
                             <div class="w-8 h-8 border-3 border-brand-orange/20 border-t-brand-orange rounded-full animate-spin mb-3"></div>
                             <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest leading-tight">Processando...</p>
                         </div>
 
                         <!-- Estado: Foto Pronta -->
                         <template v-else>
-                            <div class="aspect-square overflow-hidden relative cursor-pointer" @click="openLightbox(index)">
-                                <img :src="'/' + photo.watermarked_path" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
-                                
-                                <div class="absolute inset-0 bg-brand-dark/40 transition-opacity flex items-center justify-center backdrop-blur-[2px]"
-                                     :class="selectedPhotos.includes(photo.id) ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'">
-                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-2xl transform transition-transform duration-500"
-                                         :class="selectedPhotos.includes(photo.id) ? 'bg-green-500 text-white scale-100' : 'bg-white text-brand-dark scale-50 group-hover:scale-100'">
-                                        <svg v-if="selectedPhotos.includes(photo.id)" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                            <img :src="'/' + photo.watermarked_path" 
+                                 @click="openLightbox(index)"
+                                 class="w-full h-full object-cover cursor-zoom-in transition-transform duration-700 group-hover:scale-110" />
+                            
+                            <!-- Overlay de Seleção/Info -->
+                            <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-4 pointer-events-none">
+                                <div class="flex justify-between items-start pointer-events-auto">
+                                    <span class="bg-black/50 backdrop-blur-md text-[8px] text-white px-2 py-1 rounded font-black uppercase">#{{ photo.id }}</span>
+                                    <div @click="togglePhoto(photo.id)" 
+                                         class="w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-all"
+                                         :class="selectedPhotos.includes(photo.id) ? 'bg-green-500 text-white scale-110' : 'bg-white/20 text-white hover:bg-white hover:text-brand-dark'">
+                                        <svg v-if="selectedPhotos.includes(photo.id)" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path></svg>
                                     </div>
                                 </div>
+                                <div class="pointer-events-auto flex justify-between items-end">
+                                    <p class="text-white font-black text-sm">R$ {{ Number(photo.price).toFixed(2) }}</p>
+                                    <button @click="openLightbox(index)" class="text-[8px] text-white/70 hover:text-white uppercase font-black tracking-widest">Ampliar</button>
+                                </div>
                             </div>
 
-                            <div class="p-3 flex-grow flex flex-col justify-between">
-                                <div class="mb-2">
-                                    <p class="text-[10px] font-black text-brand-dark uppercase tracking-tighter truncate">#{{ photo.id }}</p>
-                                    <p class="text-xs font-black text-brand-blue mt-0.5">R$ {{ Number(photo.price).toFixed(2) }}</p>
-                                </div>
-
-                                <button @click="togglePhoto(photo.id)"
-                                        class="w-full flex items-center justify-center py-2 text-[8px] font-black uppercase tracking-[0.1em] rounded-lg transition-all active:scale-95"
-                                        :class="selectedPhotos.includes(photo.id) 
-                                            ? 'bg-gray-100 text-gray-400' 
-                                            : 'bg-brand-dark text-white hover:bg-black shadow-lg'">
-                                    {{ selectedPhotos.includes(photo.id) ? 'Remover' : 'Selecionar' }}
-                                </button>
+                            <!-- Indicador de Selecionada (Sempre visível se selecionada) -->
+                            <div v-if="selectedPhotos.includes(photo.id)" 
+                                 class="absolute top-0 right-0 w-8 h-8 bg-green-500 text-white flex items-center justify-center shadow-lg">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                             </div>
                         </template>
+                    </div>
                     </div>
                 </div>
 
