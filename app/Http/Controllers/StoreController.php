@@ -330,6 +330,8 @@ class StoreController extends Controller
             'photographer' => $user,
             'photos'       => $photos,
         ]);
+    }
+
     public function checkPaymentStatus(Request $request)
     {
         $txid = $request->input('txid');
