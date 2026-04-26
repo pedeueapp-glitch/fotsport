@@ -229,6 +229,12 @@ class EfiService
                     ]
                 ])->get("$baseUrl/v2/gn/pix/$idEnvio");
 
+            Log::info('Efí Payout Status - Resposta', [
+                'idEnvio' => $idEnvio,
+                'status' => $response->status(),
+                'data' => $response->json()
+            ]);
+
             return $response->json();
         } catch (\Exception $e) {
             Log::error('Erro ao consultar Payout Pix: ' . $e->getMessage());
