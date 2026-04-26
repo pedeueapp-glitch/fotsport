@@ -45,13 +45,26 @@ class WithdrawalController extends Controller
                 "Saque Fotsport #{$withdrawal->id}"
             );
 
-            if ($pixResponse && isset($pixResponse['status']) && ($pixResponse['status'] === 'EM_PROCESSAMENTO' || $pixResponse['status'] === 'REALIZADO')) {
+            if ($pixResponse && isset($pixResponse['status'])) {
+                $statusMap = [
+                    'EM_PROCESSAMENTO' => 'processing',
+                    'REALIZADO' => 'paid',
+                    'RECUSADO' => 'rejected'
+                ];
+
+                $newStatus = $statusMap[$pixResponse['status']] ?? 'processing';
+
                 $withdrawal->update([
-                    'status' => 'paid',
-                    'paid_at' => now(),
-                    'efi_payout_id' => $pixResponse['e2eId'] ?? ($pixResponse['idEnvio'] ?? null)
+                    'status' => $newStatus,
+                    'paid_at' => $newStatus === 'paid' ? now() : null,
+                    'efi_payout_id' => $pixResponse['idEnvio'] ?? null,
+                    'efi_e2e_id' => $pixResponse['e2eId'] ?? null
                 ]);
 
+                if ($newStatus === 'processing') {
+                    return back()->with('success', 'Pix aceito pela Efí e está em processamento.');
+                }
+                
                 return back()->with('success', 'Saque aprovado e Pix enviado com sucesso!');
             }
 
@@ -76,6 +89,41 @@ class WithdrawalController extends Controller
                 'trace' => $e->getTraceAsString()
             ]);
             return back()->withErrors(['message' => 'Erro crítico ao conectar na Efí: ' . $e->getMessage()]);
+        }
+    public function checkStatus(Withdrawal $withdrawal)
+    {
+        if (!auth()->user()->is_superadmin) abort(403);
+
+        if (!$withdrawal->efi_payout_id) {
+            return back()->with('error', 'Este saque não possui um ID de envio vinculado.');
+        }
+
+        try {
+            $efiService = new \App\Services\EfiService();
+            $statusResponse = $efiService->getPayoutStatus($withdrawal->efi_payout_id);
+
+            if ($statusResponse && isset($statusResponse['status'])) {
+                $statusMap = [
+                    'EM_PROCESSAMENTO' => 'processing',
+                    'REALIZADO' => 'paid',
+                    'RECUSADO' => 'rejected'
+                ];
+
+                $newStatus = $statusMap[$statusResponse['status']] ?? $withdrawal->status;
+
+                $withdrawal->update([
+                    'status' => $newStatus,
+                    'paid_at' => $newStatus === 'paid' ? ($withdrawal->paid_at ?: now()) : $withdrawal->paid_at,
+                    'efi_e2e_id' => $statusResponse['e2eId'] ?? $withdrawal->efi_e2e_id
+                ]);
+
+                return back()->with('success', 'Status atualizado: ' . $statusResponse['status']);
+            }
+
+            return back()->with('error', 'Não foi possível obter o status atualizado da Efí.');
+
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => 'Erro ao consultar status: ' . $e->getMessage()]);
         }
     }
 }

@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
     Route::prefix('admin')->group(function () {
         Route::get('/withdrawals', [\App\Http\Controllers\Admin\WithdrawalController::class, 'index'])->name('admin.withdrawals.index');
         Route::post('/withdrawals/{withdrawal}/authorize', [\App\Http\Controllers\Admin\WithdrawalController::class, 'authorizeTransfer'])->name('admin.withdrawals.authorize');
+        Route::post('/withdrawals/{withdrawal}/check-status', [\App\Http\Controllers\Admin\WithdrawalController::class, 'checkStatus'])->name('admin.withdrawals.check');
         
         // Gestão de Fotógrafos
         Route::get('/photographers', [\App\Http\Controllers\Admin\AdminController::class, 'photographers'])->name('admin.photographers.index');

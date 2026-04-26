@@ -198,5 +198,39 @@ class EfiService
             Log::error('Erro crítico no Payout Pix (PUT): ' . $e->getMessage());
             return null;
         }
+    public function getPayoutStatus($idEnvio)
+    {
+        try {
+            $certPath = storage_path('app/efi_cert.p12');
+            $auth = base64_encode(config('services.efi.client_id') . ':' . config('services.efi.client_secret'));
+            $tokenUrl = config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br/oauth/token' : 'https://api-pix.gerencianet.com.br/oauth/token';
+            
+            $tokenResponse = Http::withHeaders(['Authorization' => "Basic $auth"])
+                ->withOptions([
+                    'curl' => [
+                        CURLOPT_SSLCERT => $certPath,
+                        CURLOPT_SSLCERTTYPE => 'P12',
+                        CURLOPT_SSLCERTPASSWD => ''
+                    ]
+                ])->post($tokenUrl, ['grant_type' => 'client_credentials']);
+
+            $accessToken = $tokenResponse->json()['access_token'] ?? null;
+            if (!$accessToken) return null;
+
+            $baseUrl = config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br' : 'https://api-pix.gerencianet.com.br';
+            $response = Http::withToken($accessToken)
+                ->withOptions([
+                    'curl' => [
+                        CURLOPT_SSLCERT => $certPath,
+                        CURLOPT_SSLCERTTYPE => 'P12',
+                        CURLOPT_SSLCERTPASSWD => ''
+                    ]
+                ])->get("$baseUrl/v2/gn/pix/payout/$idEnvio");
+
+            return $response->json();
+        } catch (\Exception $e) {
+            Log::error('Erro ao consultar Payout Pix: ' . $e->getMessage());
+            return null;
+        }
     }
 }
