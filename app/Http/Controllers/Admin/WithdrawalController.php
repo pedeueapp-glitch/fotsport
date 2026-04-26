@@ -90,6 +90,8 @@ class WithdrawalController extends Controller
             ]);
             return back()->withErrors(['message' => 'Erro crítico ao conectar na Efí: ' . $e->getMessage()]);
         }
+    }
+
     public function checkStatus(Withdrawal $withdrawal)
     {
         if (!auth()->user()->is_superadmin) abort(403);
