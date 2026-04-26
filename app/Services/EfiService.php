@@ -220,6 +220,11 @@ class EfiService
             if (!$accessToken) return null;
 
             $baseUrl = config('services.efi.sandbox') ? 'https://api-pix-h.gerencianet.com.br' : 'https://api-pix.gerencianet.com.br';
+            
+            // Se o ID começar com 'E', é um e2eId. Senão, é um idEnvio.
+            $isE2E = str_starts_with($idEnvio, 'E');
+            $endpoint = $isE2E ? "/v2/pix/$idEnvio" : "/v2/gn/pix/$idEnvio";
+
             $response = Http::withToken($accessToken)
                 ->withOptions([
                     'curl' => [
@@ -227,10 +232,11 @@ class EfiService
                         CURLOPT_SSLCERTTYPE => 'P12',
                         CURLOPT_SSLCERTPASSWD => ''
                     ]
-                ])->get("$baseUrl/v2/gn/pix/$idEnvio");
+                ])->get("$baseUrl$endpoint");
 
             Log::info('Efí Payout Status - Resposta', [
-                'idEnvio' => $idEnvio,
+                'id' => $idEnvio,
+                'isE2E' => $isE2E,
                 'status' => $response->status(),
                 'data' => $response->json()
             ]);

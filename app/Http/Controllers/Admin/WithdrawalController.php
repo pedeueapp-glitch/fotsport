@@ -102,7 +102,9 @@ class WithdrawalController extends Controller
 
         try {
             $efiService = new \App\Services\EfiService();
-            $statusResponse = $efiService->getPayoutStatus($withdrawal->efi_payout_id);
+            // Tenta consultar pelo e2eId se disponível, senão usa o efi_payout_id (idEnvio)
+            $queryId = $withdrawal->efi_e2e_id ?: $withdrawal->efi_payout_id;
+            $statusResponse = $efiService->getPayoutStatus($queryId);
 
             if ($statusResponse && isset($statusResponse['status'])) {
                 $statusMap = [
