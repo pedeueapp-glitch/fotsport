@@ -9,12 +9,14 @@ const type = ref('success'); // success, error
 
 const flash = computed(() => page.props.flash);
 
-watch(flash, (newFlash) => {
-    if (newFlash.success || newFlash.error) {
+watch(() => page.props.flash, (newFlash) => {
+    console.log('Flash message detectada:', newFlash);
+    if (newFlash && (newFlash.success || newFlash.error)) {
         message.value = newFlash.success || newFlash.error;
         type.value = newFlash.success ? 'success' : 'error';
         show.value = true;
         
+        // Limpar mensagens após exibir para evitar repetição no watch se o Inertia não limpar
         setTimeout(() => {
             show.value = false;
         }, 5000);
@@ -35,7 +37,7 @@ const close = () => {
         leave-from-class="opacity-100"
         leave-to-class="opacity-0"
     >
-        <div v-if="show" class="fixed top-24 right-4 z-[999] w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 pointer-events-auto border border-gray-100">
+        <div v-if="show" class="fixed top-24 right-4 z-[9999] w-full max-w-sm overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 pointer-events-auto border border-gray-100">
             <div class="p-4">
                 <div class="flex items-start">
                     <div class="flex-shrink-0">
