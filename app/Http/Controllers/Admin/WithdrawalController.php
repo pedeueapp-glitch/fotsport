@@ -57,8 +57,8 @@ class WithdrawalController extends Controller
                 $withdrawal->update([
                     'status' => $newStatus,
                     'paid_at' => $newStatus === 'paid' ? now() : null,
-                    'efi_payout_id' => $pixResponse['idEnvio'] ?? null,
-                    'efi_e2e_id' => $pixResponse['e2eId'] ?? null
+                    'efi_payout_id' => $pixResponse['data']['idEnvio'] ?? null,
+                    'efi_e2e_id' => $pixResponse['data']['e2eId'] ?? null
                 ]);
 
                 if ($newStatus === 'processing') {
